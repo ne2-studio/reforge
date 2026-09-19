@@ -1,0 +1,11 @@
+node_modules
+dist
+storybook-static
+coverage
+.eslintcache
+.tsbuildinfo
+.env
+.env.local
+test-results
+playwright-report
+public/env-config.js
