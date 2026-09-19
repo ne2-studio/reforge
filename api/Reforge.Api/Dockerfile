@@ -1,0 +1,26 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+WORKDIR /src
+
+# Copy csproj and restore dependencies
+COPY ["Reforge.Api/Reforge.Api.csproj", "Reforge.Api/"]
+COPY ["Reforge.Core/Reforge.Core.csproj", "Reforge.Core/"]
+COPY ["Reforge.Infra/Reforge.Infra.csproj", "Reforge.Infra/"]
+COPY ["Reforge.Infra.Common/Reforge.Infra.Common.csproj", "Reforge.Infra.Common/"]
+COPY ["Reforge.Api.Common/Reforge.Api.Common.csproj", "Reforge.Api.Common/"]
+RUN dotnet restore "Reforge.Api/Reforge.Api.csproj"
+
+# Copy the rest of the code
+COPY . .
+
+# Build and publish
+RUN dotnet publish "Reforge.Api/Reforge.Api.csproj" -c Release -o /app/publish
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "Reforge.Api.dll"]
