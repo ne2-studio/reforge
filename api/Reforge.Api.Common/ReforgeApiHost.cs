@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Reforge.Core.Ping;
 using Reforge.Core.Ping.Application;
+using Reforge.Core.Profiles;
+using Reforge.Core.Profiles.Application;
 using Reforge.Core.Shared;
 using Reforge.Infra;
 using Serilog;
@@ -117,8 +119,9 @@ public static class ReforgeApiHost
 
         builder.Services.AddAuthorization();
 
-        // Application-layer manager wiring — the walking skeleton's one feature.
+        // Application-layer manager wiring.
         builder.Services.AddScoped<IPingUseCase, PingManager>();
+        builder.Services.AddScoped<IProfileUseCase, ProfileManager>();
 
         var app = builder.Build();
 

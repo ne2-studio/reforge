@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
 using Reforge.Infra.Persistence;
@@ -15,6 +16,7 @@ public static class ServiceRegistration
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IProfileRepository, ProfileRepository>();
 
         services.AddScoped<IClock, SystemClock>();
 

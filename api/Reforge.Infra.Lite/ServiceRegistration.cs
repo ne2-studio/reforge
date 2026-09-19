@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
 using Reforge.Infra;
@@ -13,6 +14,7 @@ public static class ServiceRegistration
         // Singleton, not Scoped: with no database behind it, this dictionary *is* the storage —
         // it needs to survive across requests, which is what Postgres does for the real adapter.
         services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+        services.AddSingleton<IProfileRepository, InMemoryProfileRepository>();
 
         services.AddScoped<IClock, SystemClock>();
 
