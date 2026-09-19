@@ -21,12 +21,18 @@ shippable and leaves the app working.
 
 ## Slice 2 — Meal logging (manual, no AI)
 
-- `api`: `Meals` feature. `POST/GET /meals`, `GET /day-history`,
-  `GET /daily-stats/:date`. Manual entry only — calories/macros/feedback
-  entered by the user, no OpenAI call yet (`analyze-meal` stays a stub or
-  is simply not exposed until the AI slice).
-- `app`: `MealLogger`, `MealHistory`, `DailyStats`, `DaySummary` adapted to
-  call the new endpoints.
+- `api`: `Meals` feature. `POST/GET /meals`, `GET /daily-stats/:date`.
+  Manual entry only — calories/macros/feedback entered by the user, no
+  OpenAI call yet (`analyze-meal` stays a stub or is simply not exposed
+  until the AI slice).
+  - **Locked decision**: `GET /day-history` is deferred to Slice 7. In
+    the source backend it reads the `closed_days` table, which only the
+    day-close feature (Slice 7) ever populates — a literal port now
+    would always return an empty list. `closed_days` and `/day-history`
+    are built together in Slice 7, where they're actually meaningful.
+- `app`: `MealLogger`, `DailyStats`, `DaySummary` adapted to call the new
+  endpoints. `MealHistory`/`DayHistory` (which need day-history/closed
+  days) wait for Slice 7.
 
 ## Slice 3 — Meal library
 
@@ -55,8 +61,9 @@ shippable and leaves the app working.
 ## Slice 7 — Day close / weekly progress
 
 - `api`: `closed_days` feature — close-the-day summarization,
-  `GET /weekly-progress`.
-- `app`: `DayHistory`, weekly progress views.
+  `GET /day-history` (deferred here from Slice 2 — see that slice's
+  note), `GET /weekly-progress`.
+- `app`: `DayHistory`, `MealHistory`, weekly progress views.
 
 ## Slice 8 — AI coach (deferred scope, revisit after slice 7)
 
