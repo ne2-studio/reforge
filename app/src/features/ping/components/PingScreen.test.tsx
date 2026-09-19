@@ -7,7 +7,7 @@ import { PingResult } from '@/types';
 
 describe('PingScreen', () => {
   it('shows the loading state while the request is in flight', () => {
-    render(<PingScreen result={null} isLoading error={null} onRetry={vi.fn()} onSignOut={vi.fn()} />);
+    render(<PingScreen result={null} isLoading error={null} onRetry={vi.fn()} onSignOut={vi.fn()} onGoToProfile={vi.fn()} />);
 
     expect(screen.getByText('Consultando la API…')).toBeInTheDocument();
   });
@@ -15,7 +15,7 @@ describe('PingScreen', () => {
   it('renders the synced user id and timestamp once the ping resolves', () => {
     const result = new PingResult({ sub: 'user-123', serverTimeUtc: '2026-01-01T12:00:00.000Z' });
 
-    render(<PingScreen result={result} isLoading={false} error={null} onRetry={vi.fn()} onSignOut={vi.fn()} />);
+    render(<PingScreen result={result} isLoading={false} error={null} onRetry={vi.fn()} onSignOut={vi.fn()} onGoToProfile={vi.fn()} />);
 
     expect(screen.getByText('user-123')).toBeInTheDocument();
     expect(screen.getByText('2026-01-01T12:00:00.000Z')).toBeInTheDocument();
@@ -32,6 +32,7 @@ describe('PingScreen', () => {
         error="No se pudo contactar con la API"
         onRetry={onRetry}
         onSignOut={vi.fn()}
+        onGoToProfile={vi.fn()}
       />
     );
 

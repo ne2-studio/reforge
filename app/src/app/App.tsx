@@ -6,6 +6,7 @@ import { ProtectedRoute, PublicRoute } from './routes/AuthGuards';
 import { WelcomeRoute } from '@/features/auth/routes/WelcomeRoute';
 import { CallbackRoute } from '@/features/auth/routes/CallbackRoute';
 import { PingRoute } from '@/features/ping/routes/PingRoute';
+import { ProfileRoute } from '@/features/profile/routes/ProfileRoute';
 
 // Owns routing, the auth redirect gate, and pushing the OIDC access token into api.ts on
 // every auth-state change — see docs/architecture/frontend.md.
@@ -36,6 +37,14 @@ function App() {
         element={
           <ProtectedRoute>
             <PingRoute />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/perfil"
+        element={
+          <ProtectedRoute>
+            <ProfileRoute />
           </ProtectedRoute>
         }
       />

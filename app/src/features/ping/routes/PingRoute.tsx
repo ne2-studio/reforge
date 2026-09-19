@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router-dom';
 import { api } from '@/api';
 import type { PingResult } from '@/types';
 import { PingScreen } from '../components/PingScreen';
@@ -9,6 +10,7 @@ import { PingScreen } from '../components/PingScreen';
 // so there's no state a store would own). Navigation/sign-out live here, not in PingScreen.
 export function PingRoute() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const [result, setResult] = useState<PingResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,13 @@ export function PingRoute() {
   };
 
   return (
-    <PingScreen result={result} isLoading={isLoading} error={error} onRetry={loadPing} onSignOut={handleSignOut} />
+    <PingScreen
+      result={result}
+      isLoading={isLoading}
+      error={error}
+      onRetry={loadPing}
+      onSignOut={handleSignOut}
+      onGoToProfile={() => navigate('/perfil')}
+    />
   );
 }

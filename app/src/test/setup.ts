@@ -18,6 +18,24 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
   });
 }
 
+// jsdom doesn't implement these either — Radix's Select (used by the profile feature)
+// calls them during pointer interaction; without stubs, clicking a Select in a jsdom test
+// throws instead of opening the listbox.
+if (typeof window !== 'undefined' && typeof window.HTMLElement !== 'undefined') {
+  if (!window.HTMLElement.prototype.hasPointerCapture) {
+    window.HTMLElement.prototype.hasPointerCapture = () => false;
+  }
+  if (!window.HTMLElement.prototype.setPointerCapture) {
+    window.HTMLElement.prototype.setPointerCapture = () => {};
+  }
+  if (!window.HTMLElement.prototype.releasePointerCapture) {
+    window.HTMLElement.prototype.releasePointerCapture = () => {};
+  }
+  if (!window.HTMLElement.prototype.scrollIntoView) {
+    window.HTMLElement.prototype.scrollIntoView = () => {};
+  }
+}
+
 afterEach(() => {
   cleanup();
 });

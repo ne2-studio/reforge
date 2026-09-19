@@ -60,3 +60,12 @@ export async function get<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, { headers: authHeaders() });
   return handleResponse<T>(response);
 }
+
+export async function post<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+  return handleResponse<T>(response);
+}

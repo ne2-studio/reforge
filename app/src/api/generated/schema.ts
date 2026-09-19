@@ -78,6 +78,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProfileDto"];
+                        "application/json": components["schemas"]["ProfileDto"];
+                        "text/json": components["schemas"]["ProfileDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SaveProfileRequestDto"];
+                    "text/json": components["schemas"]["SaveProfileRequestDto"];
+                    "application/*+json": components["schemas"]["SaveProfileRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProfileDto"];
+                        "application/json": components["schemas"]["ProfileDto"];
+                        "text/json": components["schemas"]["ProfileDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -89,6 +153,48 @@ export interface components {
             sub?: string | null;
             /** Format: date-time */
             serverTimeUtc?: string;
+        };
+        ProfileDto: {
+            /** Format: int32 */
+            age?: number | null;
+            gender?: string | null;
+            /** Format: double */
+            height?: number | null;
+            /** Format: double */
+            weight?: number | null;
+            activityLevel?: string | null;
+            goal?: string | null;
+            trainingDays?: string[] | null;
+            trainingType?: string | null;
+            trainingTime?: string | null;
+            restrictions?: string | null;
+            /** Format: int32 */
+            calorieTarget?: number | null;
+            extraData?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        SaveProfileRequestDto: {
+            /** Format: int32 */
+            age?: number | null;
+            gender?: string | null;
+            /** Format: double */
+            height?: number | null;
+            /** Format: double */
+            weight?: number | null;
+            activityLevel?: string | null;
+            goal?: string | null;
+            trainingDays?: string[] | null;
+            trainingType?: string | null;
+            trainingTime?: string | null;
+            restrictions?: string | null;
+            /** Format: int32 */
+            calorieTarget?: number | null;
+            extraData?: {
+                [key: string]: unknown;
+            } | null;
         };
     };
     responses: never;
