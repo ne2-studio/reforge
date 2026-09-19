@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
@@ -15,8 +16,10 @@ public static class ServiceRegistration
         // it needs to survive across requests, which is what Postgres does for the real adapter.
         services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         services.AddSingleton<IProfileRepository, InMemoryProfileRepository>();
+        services.AddSingleton<IMealRepository, InMemoryMealRepository>();
 
         services.AddScoped<IClock, SystemClock>();
+        services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserProvider, HttpContextCurrentUserProvider>();
