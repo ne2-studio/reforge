@@ -1,0 +1,67 @@
+# Minimal stack for the frontend-dev local mode and for app/acceptance-tests (once task #5
+# adds real specs there) — fake-oidc + reforge-api-lite, nothing else. No Postgres:
+# reforge-api-lite keeps everything in memory (see docs/operations/api-lite.md).
+#
+# `app` and `api-lite` are images **supplied from outside** via env vars for the acceptance
+# use case, never built by this file for that path — same principle
+# api/README.md states for the backend's own acceptance tests: the subject under test is the
+# artifact, not a rebuild from source. `scripts/run-env frontend-dev` instead builds the
+# api-lite image itself (see that script) and runs the frontend from Vite, not from the `app`
+# service below — build the images yourself first for a manual acceptance-style run:
+#
+#   docker build -t reforge-app:local app/
+#   docker build -f api/Reforge.Api.Lite/Dockerfile -t reforge-api-lite:local api/
+#   APP_IMAGE=reforge-app:local API_LITE_IMAGE=reforge-api-lite:local \
+#     docker compose -f docker-compose.lite.yml up -d app
+#
+# fake-oidc (https://github.com/ne2-studio/fake-oidc) is the same throwaway OIDC provider
+# docker-compose.yaml uses for local dev — see that file's header comment for how to sign in.
+
+name: reforge-lite
+
+services:
+  fake-oidc:
+    image: ghcr.io/ne2-studio/fake-oidc:latest
+    environment:
+      OIDC_ISSUER: "http://localhost:5000"
+      OIDC_CLIENTS: >-
+        [{"clientId":"reforge-app","redirectUris":["http://localhost:3000/callback","http://localhost:5173/callback"],"postLogoutRedirectUris":["http://localhost:3000/callback","http://localhost:5173/callback"]}]
+      OIDC_USERS: >-
+        [{"key":"user","sub":"reforge-user","email":"user@test.local","name":"Reforge User"},
+        {"key":"user2","sub":"reforge-user-2","email":"user2@test.local","name":"Reforge User 2"}]
+      OIDC_DEFAULT_USER: "user"
+    ports:
+      - "5000:5000"
+    healthcheck:
+      # No curl/wget in this image — see docker-compose.yaml's identical healthcheck comment.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/5000"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  api-lite:
+    image: ${API_LITE_IMAGE:-reforge-api-lite:local}
+    environment:
+      Auth__JwksUri: "http://fake-oidc:5000/.well-known/jwks.json"
+      Auth__ValidIssuer: "http://localhost:5000"
+      Auth__ValidAudiences__0: "reforge-app"
+    ports:
+      - "5051:8080"
+    depends_on:
+      fake-oidc:
+        condition: service_healthy
+
+  app:
+    image: ${APP_IMAGE:-reforge-app:local}
+    environment:
+      # Runtime overrides — see app/docker-entrypoint.d/95-generate-runtime-env.sh. This is
+      # what lets the exact image built for real deployment be redirected at this local/CI
+      # stack instead of production, without rebuilding it.
+      VITE_API_URL: "http://localhost:5051"
+      VITE_OIDC_AUTHORITY: "http://localhost:5000"
+      VITE_OIDC_CLIENT_ID: "reforge-app"
+      VITE_OIDC_CALLBACK_URI: "http://localhost:3000/callback"
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-lite

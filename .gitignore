@@ -1,0 +1,7 @@
+.run/
+
+# Reference-only symlinks to sibling repos — never committed
+/el-baul
+/reforge-frontend
+/recomp-coach-backend
+

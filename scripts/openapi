@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OPENAPI_SNAPSHOT="$ROOT_DIR/api/openapi/v1.swagger.json"
+
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/openapi <command>
+
+Commands:
+  accept-contract   Regenerate the reviewed OpenAPI contract snapshot after review.
+  generate-types    Generate app's raw TypeScript types from the reviewed snapshot.
+                     Optional target: app or all (Reforge has no admin app). Defaults to all.
+EOF
+}
+
+die() {
+  printf 'openapi: %s\n' "$*" >&2
+  exit 1
+}
+
+need() {
+  command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
+}
+
+run() {
+  printf '\n==> %s\n' "$*"
+  "$@"
+}
+
+ensure_root() {
+  [[ -f "$ROOT_DIR/docker-compose.yaml" ]] || die "cannot locate repo root"
+  [[ -f "$ROOT_DIR/app/package.json" ]] || die "cannot locate app package"
+}
+
+accept_contract() {
+  need dotnet
+  # NOTE: Reforge.Api.Tests doesn't exist yet (docs/plan/01-walking-skeleton.md, task #5) —
+  # this intentionally fails loudly with dotnet's own "project file not found" error until
+  # that project (and its OpenAPI snapshot test) is added, rather than silently no-op-ing.
+  run env UPDATE_OPENAPI_SNAPSHOT=1 dotnet test "$ROOT_DIR/api/Reforge.Api.Tests/Reforge.Api.Tests.csproj" --configuration Release
+}
+
+generate_app_types() {
+  [[ -f "$ROOT_DIR/app/package.json" ]] || die "cannot locate app package"
+  mkdir -p "$ROOT_DIR/app/src/api/generated"
+  run npm --prefix "$ROOT_DIR/app" exec openapi-typescript -- "$OPENAPI_SNAPSHOT" -o "$ROOT_DIR/app/src/api/generated/schema.ts"
+}
+
+generate_types() {
+  local target="${1:-all}"
+
+  need npm
+  [[ -f "$OPENAPI_SNAPSHOT" ]] || die "cannot locate OpenAPI snapshot: $OPENAPI_SNAPSHOT (run './scripts/openapi accept-contract' first)"
+
+  case "$target" in
+    app|all) generate_app_types ;;
+    *) die "unknown generate-types target: $target (Reforge has no admin app)" ;;
+  esac
+}
+
+ensure_root
+
+case "${1:-}" in
+  accept-contract) accept_contract ;;
+  generate-types) generate_types "${2:-all}" ;;
+  -h|--help|help|"") usage ;;
+  *) usage >&2; die "unknown command: $1" ;;
+esac

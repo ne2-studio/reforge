@@ -1,0 +1,100 @@
+# Local development environment: Postgres + fake-oidc + the API + the app, each built from
+# its own Dockerfile.
+#
+# The frontend's Dockerfile runs `npm run build` itself, in a build stage, baking in the
+# VITE_* build args below — nginx then just serves the resulting `dist/`. No manual
+# `npm run build` needed before `docker compose up --build`.
+#
+# fake-oidc (https://github.com/ne2-studio/fake-oidc) is a throwaway OIDC provider for
+# local/E2E use — no real login UI, users are selected via `login_hint`. Sign in with
+# `login_hint=user` or `login_hint=user2` against http://localhost:5000/authorize.
+#
+# Reforge has no admin app, MinIO/imgproxy, or Mailpit yet (see docs/architecture/backend.md
+# and docs/architecture/frontend.md) — this file grows as those land, mirroring el-baul.
+
+# Pinned explicitly (rather than left to default to the checkout directory's basename) so
+# image/container names stay predictable across scripts/run-env, scripts/verify, and CI.
+name: reforge
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: reforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d reforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  fake-oidc:
+    image: ghcr.io/ne2-studio/fake-oidc:latest
+    environment:
+      OIDC_ISSUER: "http://localhost:5000"
+      OIDC_CLIENTS: >-
+        [{"clientId":"reforge-app","redirectUris":["http://localhost:3000/callback","http://localhost:5173/callback"],"postLogoutRedirectUris":["http://localhost:3000/callback","http://localhost:5173/callback"]}]
+      OIDC_USERS: >-
+        [{"key":"user","sub":"reforge-user","email":"user@test.local","name":"Reforge User"},
+        {"key":"user2","sub":"reforge-user-2","email":"user2@test.local","name":"Reforge User 2"}]
+      OIDC_DEFAULT_USER: "user"
+    ports:
+      - "5000:5000"
+    healthcheck:
+      # No curl/wget in this image (minimal Ubuntu + .NET runtime) — bash's /dev/tcp is a
+      # TCP-connect-only check, but confirmed sufficient by el-baul: the gap between
+      # "container started" and "Kestrel accepting connections" is real (~0.5s, observed
+      # directly) but is specifically a connection-refused window, not a slower app-level
+      # delay.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/5000"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Reforge.Api/Dockerfile
+    environment:
+      # Development enables Swagger UI (see docs/architecture/backend.md#other-conventions);
+      # every setting below is still pinned explicitly via Section__Key env vars rather than
+      # relying on appsettings.Development.json's own Docker-network defaults, so this
+      # service is the single source of truth for the real image's local wiring.
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=reforge;Username=devuser;Password=devpass"
+      Auth__JwksUri: "http://fake-oidc:5000/.well-known/jwks.json"
+      Auth__ValidIssuer: "http://localhost:5000"
+      Auth__ValidAudiences__0: "reforge-app"
+    ports:
+      - "5050:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fake-oidc:
+        condition: service_healthy
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    # VITE_* is read at container start, not baked at build time — see
+    # app/docker-entrypoint.d/95-generate-runtime-env.sh, which envsubst's these into
+    # env-config.js. Same mechanism the image uses in any other environment, just with local
+    # values here.
+    environment:
+      VITE_API_URL: "http://localhost:5050"
+      VITE_OIDC_AUTHORITY: "http://localhost:5000"
+      VITE_OIDC_CLIENT_ID: "reforge-app"
+      VITE_OIDC_CALLBACK_URI: "http://localhost:3000/callback"
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

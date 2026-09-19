@@ -1,0 +1,433 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUN_ID="$(date -u +%Y%m%d%H%M%S)-$$"
+
+created_images=()
+capture_tmp_files=()
+build_images=1
+changed_mode=0
+
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/verify [options] <command>
+
+Options:
+  --changed             Reduce verification to checks affected by the current diff where
+                         the underlying runner supports a reliable selection. Checks without
+                         reliable incremental selection still run in full. Not used by CI —
+                         a development-time speed optimization, not a substitute for full
+                         verification.
+  --build-images        Build images needed by acceptance commands. Default.
+  --skip-image-build    Reuse already-built images for acceptance commands.
+
+Commands:
+  backend               Build and test the .NET backend solution in Release.
+  backend-persistence   Run EF repository/adapter tests against a real, migrated Postgres.
+  backend-acceptance    Run acceptance-tests against the real backend image.
+  frontend              Run app type checks, lint, a production build, unit/component tests,
+                         and Storybook specs.
+  frontend-acceptance   Run app Playwright E2E against app + api-lite images.
+  e2e                   Run whole-stack smoke tests against docker-compose.yaml.
+  all                   Run every verification above.
+
+Environment:
+  BACKEND_IMAGE          Tag for backend-acceptance. Defaults to reforge-api:verify-<run>.
+  APP_IMAGE              Tag for frontend-acceptance app image. Defaults to reforge-app:verify-<run>.
+  API_LITE_IMAGE         Tag for frontend-acceptance lite API image. Defaults to reforge-api-lite:verify-<run>.
+  KEEP_VERIFY_IMAGES=1   Keep images built by this script.
+  VERIFY_COVERAGE=1      Run coverage variants for fast unit checks.
+  VERIFY_NPM_CI=1        Force npm ci before Node checks.
+  VERIFY_VERBOSE=1       Stream every command's output live instead of only on failure.
+EOF
+}
+
+log() {
+  printf '\n==> %s\n' "$*"
+}
+
+die() {
+  printf 'verify: %s\n' "$*" >&2
+  exit 1
+}
+
+need() {
+  command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
+}
+
+port_in_use() {
+  local port="$1"
+
+  if docker ps --format '{{.Names}} {{.Ports}}' | grep -Eq "(^|[ ,])([0-9.]+:|\\[::\\]:)?$port->"; then
+    return 0
+  fi
+
+  if command -v ss >/dev/null 2>&1 && ss -ltn | awk '{print $4}' | grep -Eq "(:|\\])$port$"; then
+    return 0
+  fi
+
+  return 1
+}
+
+require_ports_available() {
+  local port
+  for port in "$@"; do
+    if port_in_use "$port"; then
+      die "port $port is already in use; stop the conflicting service before running this verification"
+    fi
+  done
+}
+
+# Runs a command, printing only its label and a one-line ok/FAILED result.
+# Full output is shown live under VERIFY_VERBOSE=1, and always on failure —
+# never swallowed, only deferred.
+run_capture() {
+  local label="$1"
+  shift
+  log "$label"
+
+  if [[ "${VERIFY_VERBOSE:-}" == "1" ]]; then
+    "$@"
+    return 0
+  fi
+
+  local tmp status start end
+  tmp="$(mktemp "${TMPDIR:-/tmp}/verify-XXXXXX.log")"
+  capture_tmp_files+=("$tmp")
+  start=$(date +%s)
+  if "$@" >"$tmp" 2>&1; then
+    status=0
+  else
+    status=$?
+  fi
+  end=$(date +%s)
+
+  if [[ $status -eq 0 ]]; then
+    printf '    ok (%ss)\n' "$((end - start))"
+    rm -f "$tmp"
+  else
+    printf '    FAILED (%ss, exit %s) — output:\n\n' "$((end - start))" "$status"
+    cat "$tmp"
+    rm -f "$tmp"
+    die "command failed: $label (rerun with VERIFY_VERBOSE=1 to stream live)"
+  fi
+}
+
+run() {
+  run_capture "$*" "$@"
+}
+
+run_in() {
+  local dir="$1"
+  shift
+  run_capture "($dir) $*" env -C "$ROOT_DIR/$dir" "$@"
+}
+
+ensure_root() {
+  [[ -f "$ROOT_DIR/docker-compose.yaml" ]] || die "cannot locate repo root"
+  [[ -f "$ROOT_DIR/api/Reforge.Api.slnx" ]] || die "cannot locate backend solution"
+  [[ -f "$ROOT_DIR/app/package.json" ]] || die "cannot locate app package"
+}
+
+has_npm_script() {
+  local dir="$1"
+  local script="$2"
+  node -e "process.exit(require('$ROOT_DIR/$dir/package.json').scripts && require('$ROOT_DIR/$dir/package.json').scripts['$script'] ? 0 : 1)" 2>/dev/null
+}
+
+# Falls back to the full (non-incremental) script when a --changed-flavored npm script isn't
+# wired up yet, instead of failing outright — mirrors warn_backend_changed_runs_full below,
+# just at the npm-script granularity instead of the whole suite.
+npm_script_for_changed() {
+  local dir="$1"
+  local full_script="$2"
+  local changed_script="$3"
+
+  if [[ "$changed_mode" == "1" ]]; then
+    if has_npm_script "$dir" "$changed_script"; then
+      printf '%s' "$changed_script"
+      return 0
+    fi
+    log "--changed: ($dir) no '$changed_script' script wired up yet; running '$full_script' in full"
+  fi
+  printf '%s' "$full_script"
+}
+
+ensure_npm_deps() {
+  local dir="$1"
+  local node_modules="$ROOT_DIR/$dir/node_modules"
+  local hidden_lock="$node_modules/.package-lock.json"
+
+  if [[ "${VERIFY_NPM_CI:-}" == "1" || ! -d "$node_modules" || ! -f "$hidden_lock" || "$ROOT_DIR/$dir/package-lock.json" -nt "$hidden_lock" ]]; then
+    run_in "$dir" npm ci
+  fi
+}
+
+docker_build_fresh() {
+  local tag="$1"
+  shift
+
+  need docker
+  log "Removing any existing local tag $tag"
+  docker image rm -f "$tag" >/dev/null 2>&1 || true
+
+  run docker build -t "$tag" "$@"
+  created_images+=("$tag")
+}
+
+require_image() {
+  local tag="$1"
+
+  need docker
+  docker image inspect "$tag" >/dev/null 2>&1 || die "required image not found: $tag; build it first or omit --skip-image-build"
+}
+
+cleanup() {
+  local status=$?
+  set +e
+
+  if [[ ${#capture_tmp_files[@]} -gt 0 ]]; then
+    rm -f "${capture_tmp_files[@]}"
+  fi
+
+  if [[ "${KEEP_VERIFY_IMAGES:-}" != "1" && ${#created_images[@]} -gt 0 ]]; then
+    for image in "${created_images[@]}"; do
+      log "Removing verification image $image"
+      docker image rm -f "$image" >/dev/null 2>&1 || true
+    done
+  fi
+
+  exit "$status"
+}
+trap cleanup EXIT
+
+# dotnet has no reliable native equivalent to `--changed`: no built-in way to map a set of
+# changed files to the test projects they affect without either a fragile custom heuristic
+# (regex over ProjectReference graphs, no InternalsVisibleTo/source-generator awareness) or a
+# real Test Impact Analysis system. Both are out of scope for this iteration, so `--changed`
+# intentionally still runs the full backend suites — false negatives here would be worse than
+# the time saved.
+warn_backend_changed_runs_full() {
+  local command="$1"
+  [[ "$changed_mode" == "1" ]] || return 0
+  log "--changed: no reliable affected-project selection for dotnet test; running $command in full"
+}
+
+backend() {
+  need dotnet
+  warn_backend_changed_runs_full backend
+  run dotnet restore "$ROOT_DIR/api/Reforge.Api.slnx"
+  run dotnet build "$ROOT_DIR/api/Reforge.Api.slnx" --configuration Release --no-restore
+
+  if [[ "${VERIFY_COVERAGE:-}" == "1" ]]; then
+    run dotnet test "$ROOT_DIR/api/Reforge.Api.slnx" --configuration Release --no-build --collect:"XPlat Code Coverage" --settings "$ROOT_DIR/api/coverlet.runsettings" --results-directory "$ROOT_DIR/api/coverage"
+  else
+    run dotnet test "$ROOT_DIR/api/Reforge.Api.slnx" --configuration Release --no-build
+  fi
+}
+
+backend_persistence() {
+  need dotnet
+  need docker
+  warn_backend_changed_runs_full backend-persistence
+
+  # Not part of Reforge.Api.slnx (mirrors el-baul's convention) — this is the one backend
+  # command besides backend-acceptance that needs a running Docker daemon, so it stays a
+  # separate opt-in command instead of silently becoming a `backend` requirement.
+  # NOTE: Reforge.Infra.PersistenceTests doesn't exist yet (docs/plan/01-walking-skeleton.md,
+  # task #5) — this intentionally fails loudly with dotnet's own "project file not found"
+  # error until that project is added, rather than silently no-op-ing.
+  run dotnet test "$ROOT_DIR/api/Reforge.Infra.PersistenceTests/Reforge.Infra.PersistenceTests.csproj"
+}
+
+backend_acceptance() {
+  need dotnet
+  need docker
+  warn_backend_changed_runs_full backend-acceptance
+  local image="${BACKEND_IMAGE:-reforge-api:verify-$RUN_ID}"
+
+  if [[ "$build_images" == "1" ]]; then
+    docker_build_fresh "$image" -f "$ROOT_DIR/api/Reforge.Api/Dockerfile" "$ROOT_DIR/api"
+  else
+    require_image "$image"
+  fi
+
+  # NOTE: api/acceptance-tests doesn't exist yet (task #5) — this intentionally fails loudly
+  # with dotnet's own "project file not found" error until that solution is added.
+  run env BACKEND_IMAGE="$image" dotnet test "$ROOT_DIR/api/acceptance-tests/Reforge.AcceptanceTests.slnx"
+}
+
+frontend() {
+  need npm
+  ensure_npm_deps app
+  # typecheck/lint/build are cheap and global; not worth making incremental.
+  run_in app npm run typecheck
+  run_in app npm run lint
+  run_in app npm run build
+
+  if [[ "${VERIFY_COVERAGE:-}" == "1" ]]; then
+    run_in app npm run test:coverage
+    write_node_coverage_summary app
+  else
+    local test_script
+    test_script="$(npm_script_for_changed app test test:changed)"
+    run_in app npm run "$test_script"
+  fi
+
+  run_in app npx playwright install chromium
+  local storybook_script
+  storybook_script="$(npm_script_for_changed app test:storybook test:storybook:changed)"
+  run_in app npm run "$storybook_script"
+}
+
+write_node_coverage_summary() {
+  local dir="$1"
+
+  run_in "$dir" node <<'NODE'
+const fs = require('node:fs');
+const { createCoverageMap } = require('istanbul-lib-coverage');
+
+const finalCoveragePath = 'coverage/coverage-final.json';
+const jsonSummaryPath = 'coverage/coverage-summary.json';
+const summaryPath = 'coverage/summary.txt';
+
+if (fs.existsSync(summaryPath)) {
+  process.exit(0);
+}
+
+let total;
+if (fs.existsSync(jsonSummaryPath)) {
+  total = JSON.parse(fs.readFileSync(jsonSummaryPath, 'utf8')).total;
+} else if (fs.existsSync(finalCoveragePath)) {
+  const coverage = createCoverageMap(JSON.parse(fs.readFileSync(finalCoveragePath, 'utf8')));
+  total = coverage.getCoverageSummary().toJSON();
+} else {
+  throw new Error(`Cannot write ${summaryPath}: missing ${jsonSummaryPath} and ${finalCoveragePath}`);
+}
+
+function line(label, key) {
+  const metric = total[key];
+  return `${label.padEnd(12)}: ${String(metric.pct).padStart(6)}% ( ${metric.covered}/${metric.total} )`;
+}
+
+fs.mkdirSync('coverage', { recursive: true });
+fs.writeFileSync(
+  summaryPath,
+  [
+    'Coverage summary from v8',
+    line('Statements', 'statements'),
+    line('Branches', 'branches'),
+    line('Functions', 'functions'),
+    line('Lines', 'lines'),
+    '',
+  ].join('\n')
+);
+NODE
+}
+
+frontend_acceptance() {
+  need npm
+  need docker
+  local app_image="${APP_IMAGE:-reforge-app:verify-$RUN_ID}"
+  local api_lite_image="${API_LITE_IMAGE:-reforge-api-lite:verify-$RUN_ID}"
+
+  ensure_npm_deps app
+  run docker compose -f "$ROOT_DIR/docker-compose.lite.yml" down -v --remove-orphans
+  require_ports_available 3000 5000 5051
+
+  if [[ "$build_images" == "1" ]]; then
+    docker_build_fresh "$app_image" "$ROOT_DIR/app"
+    docker_build_fresh "$api_lite_image" -f "$ROOT_DIR/api/Reforge.Api.Lite/Dockerfile" "$ROOT_DIR/api"
+  else
+    require_image "$app_image"
+    require_image "$api_lite_image"
+  fi
+
+  run_in app npx playwright install chromium
+  local acceptance_script
+  acceptance_script="$(npm_script_for_changed app test:acceptance test:acceptance:changed)"
+  # NOTE: app/acceptance-tests has no spec files yet (task #5) — `npm run test:acceptance`
+  # will fail loudly ("No tests found") until that follow-up adds real specs. See
+  # app/acceptance-tests/README.md.
+  run_in app env APP_IMAGE="$app_image" API_LITE_IMAGE="$api_lite_image" npm run "$acceptance_script"
+}
+
+e2e() {
+  need npm
+  need docker
+
+  # NOTE: e2e-tests/ doesn't exist yet — no task in the current plan scaffolds it. This
+  # intentionally fails loudly (missing directory) rather than silently no-op-ing until a
+  # follow-up task adds a whole-stack smoke suite against docker-compose.yaml.
+  [[ -f "$ROOT_DIR/e2e-tests/package.json" ]] || die "cannot locate e2e-tests package at $ROOT_DIR/e2e-tests; this suite has not been scaffolded yet"
+
+  ensure_npm_deps e2e-tests
+  run_in e2e-tests npx playwright install chromium
+  run_in e2e-tests npm run typecheck
+  run_in e2e-tests npm run test:e2e
+}
+
+all() {
+  backend
+  backend_persistence
+  backend_acceptance
+  frontend
+  frontend_acceptance
+  e2e
+}
+
+ensure_root
+
+command=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --changed)
+      changed_mode=1
+      shift
+      ;;
+    --build-images|--rebuild-images)
+      build_images=1
+      shift
+      ;;
+    --skip-image-build|--no-image-build)
+      build_images=0
+      shift
+      ;;
+    --)
+      shift
+      if [[ $# -gt 0 ]]; then
+        command="$1"
+        shift
+      fi
+      break
+      ;;
+    -h|--help|help)
+      usage
+      exit 0
+      ;;
+    -*)
+      usage >&2
+      die "unknown option: $1"
+      ;;
+    *)
+      command="$1"
+      shift
+      break
+      ;;
+  esac
+done
+
+[[ $# -eq 0 ]] || die "unexpected argument: $1"
+
+case "$command" in
+  backend) backend ;;
+  backend-persistence) backend_persistence ;;
+  backend-acceptance) backend_acceptance ;;
+  frontend) frontend ;;
+  frontend-acceptance) frontend_acceptance ;;
+  e2e) e2e ;;
+  all) all ;;
+  "") usage ;;
+  *) usage >&2; die "unknown command: $command" ;;
+esac
