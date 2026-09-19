@@ -43,6 +43,7 @@ export function PingRoute() {
       onRetry={loadPing}
       onSignOut={handleSignOut}
       onGoToProfile={() => navigate('/perfil')}
+      onGoToMeals={() => navigate('/comidas')}
     />
   );
 }

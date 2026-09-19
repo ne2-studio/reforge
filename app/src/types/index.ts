@@ -70,3 +70,94 @@ export class UserProfile {
 // Fields the user can submit via POST /profile (a full replace, not a patch) — mirrors
 // SaveProfileRequestDto, i.e. ProfileDtoShape minus the server-owned `updatedAt`.
 export type SaveProfileData = Omit<ProfileDtoShape, 'updatedAt'>;
+
+// Wire shape of api/Reforge.Core/Meals/IMealsUseCase.cs's MealDto — field names already match
+// this class's own property names, verified against api/openapi/v1.swagger.json's MealDto
+// schema. Slice 2 is manual entry only, so every meal is user-typed (see SaveMealDtoShape's
+// comment) — there's no `manualAnalysis` wrapper like the source `reforge-frontend`.
+export interface MealDtoShape {
+  id: string;
+  mealText: string;
+  category: string;
+  time: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  feedback: string | null;
+  extraData: Record<string, unknown> | null;
+  timestamp: string;
+  date: string;
+}
+
+export class Meal {
+  readonly id: string;
+  readonly mealText: string;
+  readonly category: string;
+  readonly time: string;
+  readonly calories: number;
+  readonly protein: number;
+  readonly carbs: number;
+  readonly fats: number;
+  readonly feedback: string | null;
+  readonly extraData: Record<string, unknown>;
+  readonly timestamp: Date;
+  readonly date: string;
+
+  constructor(data: MealDtoShape) {
+    this.id = data.id;
+    this.mealText = data.mealText;
+    this.category = data.category;
+    this.time = data.time;
+    this.calories = data.calories;
+    this.protein = data.protein;
+    this.carbs = data.carbs;
+    this.fats = data.fats;
+    this.feedback = data.feedback;
+    this.extraData = data.extraData ?? {};
+    this.timestamp = new Date(data.timestamp);
+    this.date = data.date;
+  }
+}
+
+// Fields the user can submit via POST /meals — mirrors SaveMealRequestDto, i.e. MealDtoShape
+// minus the server-owned `id`/`timestamp`/`date`.
+export type SaveMealData = Omit<MealDtoShape, 'id' | 'timestamp' | 'date'>;
+
+// Wire shape of MacroValuesDto — shared by DailyStatsDtoShape's `consumed`/`targets`.
+export interface MacroValuesShape {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export class MacroValues {
+  readonly calories: number;
+  readonly protein: number;
+  readonly carbs: number;
+  readonly fats: number;
+
+  constructor(data: MacroValuesShape) {
+    this.calories = data.calories;
+    this.protein = data.protein;
+    this.carbs = data.carbs;
+    this.fats = data.fats;
+  }
+}
+
+// Wire shape of GET /daily-stats/{date}'s DailyStatsDto.
+export interface DailyStatsDtoShape {
+  consumed: MacroValuesShape;
+  targets: MacroValuesShape;
+}
+
+export class DailyStats {
+  readonly consumed: MacroValues;
+  readonly targets: MacroValues;
+
+  constructor(data: DailyStatsDtoShape) {
+    this.consumed = new MacroValues(data.consumed);
+    this.targets = new MacroValues(data.targets);
+  }
+}

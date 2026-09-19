@@ -13,3 +13,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `docs/architecture/frontend.md`, `docs/operations/local-development.md`,
   `docs/operations/api-lite.md`), and the `run`/`verify`/`update-changelog` Claude skills,
   adapted from `el-baul`.
+- Manual meal logging: log a meal's macros by hand and see the day's calorie/protein/carb/fat
+  totals update against your targets.

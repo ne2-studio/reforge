@@ -9,13 +9,15 @@ interface PingScreenProps {
   onRetry: () => void;
   onSignOut: () => void;
   onGoToProfile: () => void;
+  onGoToMeals: () => void;
 }
 
 // Presentational — no react-router-dom/store/useCases imports. The one real authenticated
 // screen for the walking skeleton (docs/plan/01-walking-skeleton.md): shows the result of
 // calling the backend's authenticated `GET /ping` with the OIDC access token. Also the app's
-// minimal nav affordance to `/perfil` (Slice 1) — there's no real home screen yet.
-export function PingScreen({ result, isLoading, error, onRetry, onSignOut, onGoToProfile }: PingScreenProps) {
+// minimal nav affordance to `/perfil` (Slice 1) and `/comidas` (Slice 2) — there's no real
+// home screen yet.
+export function PingScreen({ result, isLoading, error, onRetry, onSignOut, onGoToProfile, onGoToMeals }: PingScreenProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
       <Card className="max-w-md w-full p-6 space-y-4 text-center">
@@ -44,6 +46,9 @@ export function PingScreen({ result, isLoading, error, onRetry, onSignOut, onGoT
           </Button>
           <Button variant="secondary" onClick={onGoToProfile}>
             Mi perfil
+          </Button>
+          <Button variant="secondary" onClick={onGoToMeals}>
+            Comidas
           </Button>
           <Button variant="ghost" onClick={onSignOut}>
             Cerrar sesión
