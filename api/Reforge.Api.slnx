@@ -2,6 +2,7 @@
   <Project Path="Reforge.Api/Reforge.Api.csproj" />
   <Project Path="Reforge.Api.Common/Reforge.Api.Common.csproj" />
   <Project Path="Reforge.Api.Lite/Reforge.Api.Lite.csproj" />
+  <Project Path="Reforge.Api.Tests/Reforge.Api.Tests.csproj" />
   <Project Path="Reforge.Infra/Reforge.Infra.csproj" />
   <Project Path="Reforge.Infra.Common/Reforge.Infra.Common.csproj" />
   <Project Path="Reforge.Infra.Lite/Reforge.Infra.Lite.csproj" />

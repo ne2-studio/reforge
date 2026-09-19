@@ -40,10 +40,9 @@ npm run build-storybook   # static site, output to storybook-static/
 npm run test:storybook    # executable Storybook specs, run in Chromium via @storybook/addon-vitest
 ```
 
-`npm run test:acceptance` (Playwright against the built frontend image + `Reforge.Api.Lite`) is
-scaffolded (`playwright.config.ts`, `acceptance-tests/`) but **not implemented yet** — it's a
-follow-up task (`docs/plan/01-walking-skeleton.md`, task #5), which also wires
-`global-setup`/`global-teardown` to boot the images plus a `fake-oidc` container.
+`npm run test:acceptance` runs Playwright against the built frontend image + `Reforge.Api.Lite`
+(`playwright.config.ts`, `acceptance-tests/`) — see `acceptance-tests/README.md` for the exact
+build/run steps and what it covers.
 
 ## Structure
 

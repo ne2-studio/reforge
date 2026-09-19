@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Deliberately excluded from Reforge.Api.slnx (mirrors el-baul's own ElBaul.Api.Tests
+    convention): kept as its own explicit `dotnet test` target so `./scripts/openapi
+    accept-contract` and `./scripts/verify backend` can each address exactly the projects they
+    need — the OpenAPI snapshot test in particular writes to a checked-in file under
+    api/openapi/, which a plain `backend` verification run should never do as a side effect.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reforge.Api.Common\Reforge.Api.Common.csproj" />
+    <ProjectReference Include="..\Reforge.Infra.Lite\Reforge.Infra.Lite.csproj" />
+  </ItemGroup>
+
+</Project>

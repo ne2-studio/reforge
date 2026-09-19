@@ -347,9 +347,6 @@ frontend_acceptance() {
   run_in app npx playwright install chromium
   local acceptance_script
   acceptance_script="$(npm_script_for_changed app test:acceptance test:acceptance:changed)"
-  # NOTE: app/acceptance-tests has no spec files yet (task #5) — `npm run test:acceptance`
-  # will fail loudly ("No tests found") until that follow-up adds real specs. See
-  # app/acceptance-tests/README.md.
   run_in app env APP_IMAGE="$app_image" API_LITE_IMAGE="$api_lite_image" npm run "$acceptance_script"
 }
 

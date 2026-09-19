@@ -1,8 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Scaffold only: verifies the built frontend image + Reforge.Api.Lite once both exist
-// (docs/plan/01-walking-skeleton.md, task #5 — the acceptance suite itself, including
-// global-setup/teardown that boot the images and a fake-oidc container, is built there).
+// Verifies the built frontend image + Reforge.Api.Lite (own compose file, own setup/teardown).
 // Deliberately a separate package from a future repo-root e2e suite, same reasoning as
 // el-baul's app/playwright.config.ts.
 export default defineConfig({
@@ -15,6 +13,8 @@ export default defineConfig({
     ? [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']]
     : 'list',
   outputDir: './test-results',
+  globalSetup: './acceptance-tests/global-setup.ts',
+  globalTeardown: './acceptance-tests/global-teardown.ts',
   timeout: 30_000,
   use: {
     baseURL: 'http://localhost:3000',
