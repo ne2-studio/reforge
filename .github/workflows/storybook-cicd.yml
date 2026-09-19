@@ -1,0 +1,87 @@
+name: Storybook CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/storybook-cicd.yml'
+      - 'app/**'
+      - 'storybook/**'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: storybook-cicd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-storybook
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build/test setup
+        uses: ./.github/actions/setup-node-package
+        with:
+          working-directory: app
+
+      - name: Build/test browser setup
+        uses: ./.github/actions/setup-playwright
+        with:
+          working-directory: app
+          cache-dependency-path: app/package-lock.json
+
+      - name: Verify Storybook executable specs
+        working-directory: app
+        run: npm run test:storybook
+
+      # Build context is the repo root - see storybook/Dockerfile.
+      - name: Package Storybook image
+        uses: ./.github/actions/docker-build-image
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+          context: .
+          dockerfile: storybook/Dockerfile
+          cache-scope: storybook
+
+      - name: Scan Storybook image
+        uses: ./.github/actions/scan-image
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+
+      - name: Release Storybook image
+        uses: ./.github/actions/release-ghcr-image
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          sha: ${{ github.sha }}
+          username: ${{ github.actor }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: storybook-production
+    # Reforge has no Coolify webhook secrets configured yet — this job is gated off by default
+    # via a repository Actions variable (not a secret) so it's always skipped until someone
+    # deliberately sets vars.DEPLOY_ENABLED=true after wiring up the secrets below. See
+    # docs/operations/local-development.md for local environment setup in the meantime.
+    if: vars.DEPLOY_ENABLED == 'true'
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploy Storybook
+        uses: ./.github/actions/deploy-coolify
+        with:
+          service: storybook
+          webhook: ${{ secrets.COOLIFY_WEBHOOK_STORYBOOK }}
+          token: ${{ secrets.COOLIFY_API_TOKEN }}

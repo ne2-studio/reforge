@@ -1,0 +1,133 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/frontend-cicd.yml'
+      - 'app/**'
+      - 'docker-compose.lite.yml'
+      - 'scripts/**'
+      # Everything reforge-api-lite is built from (see api/Reforge.Api.Lite/Dockerfile) — this
+      # pipeline builds and runs that image as part of its acceptance test, so a change to any
+      # of these can break it just as much as a change under app/ can.
+      - 'api/Reforge.Core/**'
+      - 'api/Reforge.Api.Common/**'
+      - 'api/Reforge.Api.Lite/**'
+      - 'api/Reforge.Infra.Common/**'
+      - 'api/Reforge.Infra.Lite/**'
+      - 'api/openapi/**'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: frontend-cicd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build/test setup
+        uses: ./.github/actions/setup-node-package
+        with:
+          working-directory: app
+
+      - name: Build/test generated API contract
+        uses: ./.github/actions/verify-openapi-types
+        with:
+          target: app
+          generated-schema: app/src/api/generated/schema.ts
+
+      - name: Build/test browser setup
+        uses: ./.github/actions/setup-playwright
+        with:
+          working-directory: app
+          cache-dependency-path: app/package-lock.json
+
+      - name: Build/test frontend
+        run: VERIFY_COVERAGE=1 ./scripts/verify frontend
+
+      - name: Build/test coverage report
+        uses: ./.github/actions/publish-node-coverage
+        with:
+          title: Frontend test coverage
+          summary-path: app/coverage/summary.txt
+          artifact-name: frontend-coverage-report
+          artifact-path: app/coverage
+
+      - name: Package frontend image
+        # No VITE_* build args are passed for app: the image reads runtime config at container
+        # start, matching production deployment.
+        uses: ./.github/actions/docker-build-image
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+          context: app
+          cache-scope: frontend-app
+
+      - name: Scan frontend image
+        uses: ./.github/actions/scan-image
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+
+      - name: Package acceptance API image
+        uses: ./.github/actions/docker-build-image
+        with:
+          image: reforge-api-lite:ci
+          context: api
+          dockerfile: api/Reforge.Api.Lite/Dockerfile
+          cache-scope: api-lite
+
+      - name: Verify packaged frontend
+        env:
+          APP_IMAGE: ${{ env.IMAGE_NAME }}:latest
+          API_LITE_IMAGE: reforge-api-lite:ci
+          KEEP_VERIFY_IMAGES: "1"
+        run: ./scripts/verify --skip-image-build frontend-acceptance
+
+      - name: Verify Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: app/playwright-report/
+          retention-days: 7
+
+      - name: Release frontend image
+        uses: ./.github/actions/release-ghcr-image
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          sha: ${{ github.sha }}
+          username: ${{ github.actor }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: frontend-production
+    # Reforge has no Coolify webhook secrets configured yet — this job is gated off by default
+    # via a repository Actions variable (not a secret) so it's always skipped until someone
+    # deliberately sets vars.DEPLOY_ENABLED=true after wiring up the secrets below. See
+    # docs/operations/local-development.md for local environment setup in the meantime.
+    if: vars.DEPLOY_ENABLED == 'true'
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploy frontend
+        uses: ./.github/actions/deploy-coolify
+        with:
+          service: frontend
+          webhook: ${{ secrets.COOLIFY_WEBHOOK_FRONTEND }}
+          token: ${{ secrets.COOLIFY_API_TOKEN }}

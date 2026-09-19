@@ -1,0 +1,101 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/backend-cicd.yml'
+      - 'api/**'
+      - 'scripts/**'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: backend-cicd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}-api
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build/test backend
+        run: VERIFY_COVERAGE=1 ./scripts/verify backend
+
+      # Merges the per-project cobertura files coverlet drops under coverage/<guid>/ (one per
+      # xunit project included in Reforge.Api.slnx with coverage enabled: Reforge.Core.Tests,
+      # Reforge.Api.Tests) into a single markdown report with a combined total plus a
+      # per-assembly breakdown.
+      - name: Build/test coverage report
+        uses: ./.github/actions/publish-dotnet-coverage
+        with:
+          reports: api/coverage/**/coverage.cobertura.xml
+          target-directory: api/coverage/report
+          artifact-name: backend-coverage-report
+
+      # Excluded from Reforge.Api.slnx (needs a real Postgres via Testcontainers), so it isn't
+      # part of the "Build/test backend" step above. Runs against source before the image build
+      # below, not against the packaged image — cheaper to fail here than after docker build.
+      - name: Backend persistence tests
+        run: ./scripts/verify backend-persistence
+
+      - name: Package backend image
+        uses: ./.github/actions/docker-build-image
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+          context: api
+          cache-scope: backend-api
+
+      - name: Scan backend image
+        uses: ./.github/actions/scan-image
+        with:
+          image: ${{ env.IMAGE_NAME }}:latest
+
+      - name: Verify packaged backend
+        env:
+          BACKEND_IMAGE: ${{ env.IMAGE_NAME }}:latest
+          KEEP_VERIFY_IMAGES: "1"
+        run: ./scripts/verify --skip-image-build backend-acceptance
+
+      - name: Release backend image
+        uses: ./.github/actions/release-ghcr-image
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          sha: ${{ github.sha }}
+          username: ${{ github.actor }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: backend-production
+    # Reforge has no Coolify webhook secrets configured yet — this job is gated off by default
+    # via a repository Actions variable (not a secret) so it's always skipped until someone
+    # deliberately sets vars.DEPLOY_ENABLED=true after wiring up the secrets below. See
+    # docs/operations/local-development.md for local environment setup in the meantime.
+    if: vars.DEPLOY_ENABLED == 'true'
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploy backend
+        uses: ./.github/actions/deploy-coolify
+        with:
+          service: backend
+          webhook: ${{ secrets.COOLIFY_WEBHOOK_BACKEND }}
+          token: ${{ secrets.COOLIFY_API_TOKEN }}
