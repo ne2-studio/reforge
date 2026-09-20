@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Reforge.Core.Activities.Domain;
 using Reforge.Core.MealLibrary.Domain;
 using Reforge.Core.Meals.Domain;
+using Reforge.Core.Measurements.Domain;
 using Reforge.Core.Profiles.Domain;
 using Reforge.Core.Users.Domain;
 using Reforge.Core.Workouts.Domain;
@@ -16,6 +17,7 @@ public class ReforgeDbContext(DbContextOptions<ReforgeDbContext> options) : DbCo
     public DbSet<MealLibraryItem> MealLibraryItems => Set<MealLibraryItem>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<Workout> Workouts => Set<Workout>();
+    public DbSet<Measurement> Measurements => Set<Measurement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

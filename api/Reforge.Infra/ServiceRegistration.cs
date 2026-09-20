@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Reforge.Core.Activities.OutputPorts;
 using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
+using Reforge.Core.Measurements.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
@@ -25,6 +26,7 @@ public static class ServiceRegistration
         services.AddScoped<IMealLibraryRepository, MealLibraryRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
+        services.AddScoped<IMeasurementRepository, MeasurementRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();

@@ -13,6 +13,8 @@ using Reforge.Core.MealLibrary;
 using Reforge.Core.MealLibrary.Application;
 using Reforge.Core.Meals;
 using Reforge.Core.Meals.Application;
+using Reforge.Core.Measurements;
+using Reforge.Core.Measurements.Application;
 using Reforge.Core.Ping;
 using Reforge.Core.Ping.Application;
 using Reforge.Core.Profiles;
@@ -134,6 +136,7 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IMealLibraryUseCase, MealLibraryManager>();
         builder.Services.AddScoped<IActivitiesUseCase, ActivitiesManager>();
         builder.Services.AddScoped<IWorkoutsUseCase, WorkoutsManager>();
+        builder.Services.AddScoped<IMeasurementsUseCase, MeasurementsManager>();
 
         var app = builder.Build();
 
