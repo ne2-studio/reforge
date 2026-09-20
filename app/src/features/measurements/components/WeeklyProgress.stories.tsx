@@ -24,7 +24,7 @@ const weeklyProgress = new WeeklyProgressData({
 });
 
 const meta = {
-  title: 'Features/History/WeeklyProgress',
+  title: 'Features/Measurements/WeeklyProgress',
   component: WeeklyProgress,
   args: {
     weeklyProgress: null,

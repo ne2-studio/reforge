@@ -7,7 +7,7 @@ import { useWeeklyProgressStore } from '@/store/weeklyProgressStore';
 import { loadProfile } from '@/features/profile/useCases';
 import { loadMeals, loadDailyStats, todayDateString } from '@/features/meals/useCases';
 import { loadActivities } from '@/features/activities/useCases';
-import { loadWeeklyProgress } from '@/features/history/useCases';
+import { loadWeeklyProgress } from '@/features/measurements/useCases';
 import { HomeScreen } from '../components/HomeScreen';
 
 // Container for /home. Loads (read-only) the profile, meals, daily-stats, activities and

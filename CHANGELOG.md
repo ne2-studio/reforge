@@ -21,11 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   workouts, with a history list (activities) or stat cards and charts (workouts).
 - Progress tracking: log weight/waist/neck measurements and see stat cards and trend charts,
   including a body-fat % and lean-mass estimate computed from your profile once enough data is
-  available.
+  available. The Progreso screen has two tabs: "Medidas y evolución" for this, and "Resumen
+  semanal" for your weekly calorie deficit/surplus summary and adherence streak.
 - Recordatorios: activa avisos generales (canal y hora por defecto) y crea tus propios
   recordatorios personalizados (mensaje, hora y días de la semana) desde la pantalla de perfil.
-- Historial: consulta tu progreso semanal de déficit y superávit calórico con la racha de días
-  en déficit.
 - Coach de IA: chatea con tu coach personal desde un botón flotante en Comidas, y registra una
   comida describiéndola en texto libre para que la IA calcule sus macros y la guarde por ti.
 - Suscripción Premium: consulta tu plan y tu uso de funciones de IA desde el perfil, mejora tu
@@ -46,8 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   día, en lugar de solo las comidas de hoy; el formulario para registrar una comida se abre
   ahora desde un botón "Registrar comida" en una ventana modal, en vez de estar siempre visible
   en la pantalla.
-- El menú de usuario ahora enlaza a "Progreso semanal" en vez de "Historial de comidas", ya que
-  el historial de comidas se consulta directamente en la pantalla de Comidas.
+- El menú de usuario ya no incluye el enlace a "Progreso semanal": ese contenido ahora vive
+  como pestaña "Resumen semanal" dentro de la pantalla Progreso, junto a "Medidas y evolución".
 
 ### Fixed
 

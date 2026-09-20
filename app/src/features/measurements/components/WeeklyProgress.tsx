@@ -24,8 +24,8 @@ function isToday(dateStr: string): boolean {
   return parsed.toDateString() === new Date().toDateString();
 }
 
-// Presentational — no react-router-dom/store/useCases imports. "Progreso semanal" tab of
-// /historial: GET /weekly-progress's summary (total deficit/surplus, daily average,
+// Presentational — no react-router-dom/store/useCases imports. "Resumen semanal" tab of
+// /progreso: GET /weekly-progress's summary (total deficit/surplus, daily average,
 // days-in-deficit vs days-in-surplus, adherence streak, insights) plus a per-day breakdown.
 // Layout/copy ideas borrowed from legacy/components/WeeklyProgress.tsx (Spanish day-name/
 // number formatting, deficit-vs-superávit badge styling) — not its AI-coach-analysis bits,

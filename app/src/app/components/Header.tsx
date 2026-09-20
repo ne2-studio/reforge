@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
-import { Flame, User, History, Crown, LogOut } from 'lucide-react';
+import { Flame, User, Crown, LogOut } from 'lucide-react';
 import { Button } from '@/design-system/components/ui/button';
 import { Avatar, AvatarFallback } from '@/design-system/components/ui/avatar';
 import {
@@ -77,10 +77,6 @@ export function Header() {
             <DropdownMenuItem onClick={() => navigate('/perfil')} className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/historial')} className="cursor-pointer">
-              <History className="mr-2 h-4 w-4" />
-              <span>Progreso semanal</span>
             </DropdownMenuItem>
             {subscriptionsEnabled && (
               <>

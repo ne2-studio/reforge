@@ -14,7 +14,6 @@ const commonProps = {
   onGoToActivity: vi.fn(),
   onGoToWorkouts: vi.fn(),
   onGoToProgress: vi.fn(),
-  onGoToHistory: vi.fn(),
   showSubscription: false,
   onGoToSubscription: vi.fn(),
 };

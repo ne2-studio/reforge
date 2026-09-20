@@ -9,7 +9,7 @@ interface WeeklyProgressState {
 }
 
 // Domain store for weekly progress — see docs/architecture/frontend.md's `store/` layer.
-// Read by HistoryRoute's "Progreso semanal" tab and by HomeRoute's summary, the same "shared,
+// Read by ProgressRoute's "Resumen semanal" tab and by HomeRoute's summary, the same "shared,
 // must survive navigation" reasoning as mealsStore/measurementStore.
 export const useWeeklyProgressStore = create<WeeklyProgressState>((set) => ({
   weeklyProgress: null,

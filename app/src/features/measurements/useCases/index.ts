@@ -1,11 +1,12 @@
 import { api } from '@/api';
 import { useMeasurementStore } from '@/store/measurementStore';
+import { useWeeklyProgressStore } from '@/store/weeklyProgressStore';
 import type { LogMeasurementData } from '@/types';
 
 // Orchestration layer for the measurements feature — see docs/architecture/frontend.md's
-// `useCases/` layer. Each function calls api.measurements.*, then writes the result into
-// measurementStore; ProgressRoute reads the store's state and calls these for anything
-// mutating.
+// `useCases/` layer. Each function calls api.measurements.* or api.weeklyProgress.*, then
+// writes the result into measurementStore/weeklyProgressStore; ProgressRoute reads the
+// stores' state and calls these for anything mutating.
 
 export async function loadMeasurements(): Promise<void> {
   useMeasurementStore.setState({ isLoading: true, error: null });
@@ -36,5 +37,18 @@ export async function logMeasurement(data: LogMeasurementData): Promise<void> {
       isLoading: false,
     });
     throw error;
+  }
+}
+
+export async function loadWeeklyProgress(): Promise<void> {
+  useWeeklyProgressStore.setState({ isLoading: true, error: null });
+  try {
+    const weeklyProgress = await api.weeklyProgress.getWeeklyProgress();
+    useWeeklyProgressStore.setState({ weeklyProgress, isLoading: false });
+  } catch (error) {
+    useWeeklyProgressStore.setState({
+      error: error instanceof Error ? error.message : 'No se pudo cargar el progreso semanal',
+      isLoading: false,
+    });
   }
 }

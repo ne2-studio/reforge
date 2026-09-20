@@ -50,7 +50,6 @@ export function PingRoute() {
       onGoToActivity={() => navigate('/actividad')}
       onGoToWorkouts={() => navigate('/entrenamientos')}
       onGoToProgress={() => navigate('/progreso')}
-      onGoToHistory={() => navigate('/historial')}
       showSubscription={subscriptionsEnabled}
       onGoToSubscription={() => navigate('/suscripcion')}
     />

@@ -12,7 +12,7 @@ vi.mock('@/api', () => ({
 }));
 
 import { api } from '@/api';
-import { loadWeeklyProgress } from '@/features/history/useCases';
+import { loadWeeklyProgress } from '@/features/measurements/useCases';
 import { WeeklyProgress } from '@/types';
 
 const weeklyProgressDto = {
@@ -25,7 +25,7 @@ const weeklyProgressDto = {
   insights: [],
 };
 
-describe('weeklyProgressStore + history useCases', () => {
+describe('weeklyProgressStore + measurements useCases', () => {
   beforeEach(() => {
     useWeeklyProgressStore.setState({ weeklyProgress: null, isLoading: false, error: null });
     vi.clearAllMocks();

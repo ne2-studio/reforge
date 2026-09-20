@@ -26,8 +26,8 @@ import type { AnalyzeMealData, SaveMealData, SaveMealLibraryItemData } from '@/t
 // (features/home), which loads dailyStats itself; logMeal/analyzeAndLogMeal below still
 // refresh the shared mealsStore.dailyStats after a save so that card stays current. Shows the
 // full meal history (last week, most recent day first) via the same MealHistory widget the
-// /historial "Comidas" tab used to own; day-close and weekly progress live at /historial
-// (features/history, Slice 7). MealLogger is a modal (Dialog), matching /actividad's
+// old /historial "Comidas" tab used to own; day-close and weekly progress now live at
+// /progreso (features/measurements). MealLogger is a modal (Dialog), matching /actividad's
 // button+modal pattern instead of an inline form.
 export function MealsRoute() {
   const navigate = useNavigate();
