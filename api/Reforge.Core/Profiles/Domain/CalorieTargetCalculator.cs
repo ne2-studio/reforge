@@ -1,14 +1,25 @@
+using Reforge.Core.Workouts.Domain;
+
 namespace Reforge.Core.Profiles.Domain;
 
-// Mifflin-St Jeor BMR × activity multiplier ± goal adjustment. Used wherever a profile's
-// CalorieTarget is unset — falls back to a flat default only when there isn't enough profile
-// data (age/gender/height/weight) to compute a real estimate.
+// Mifflin-St Jeor BMR × activity multiplier ± goal adjustment ± today's training bonus. Used
+// wherever a profile's CalorieTarget is unset — falls back to a flat default only when there
+// isn't enough profile data (age/gender/height/weight) to compute a real estimate. A profile
+// with an explicit CalorieTarget always wins as-is, todaysWorkouts included — a value the user
+// typed in isn't ours to adjust.
 public static class CalorieTargetCalculator
 {
     private const int DefaultCalorieTarget = 2000;
     private const int MinimumCalorieTarget = 1200;
+    private const double LoseFatDeficitShare = 0.15;
 
-    public static int Calculate(UserProfile profile)
+    // Same per-minute cardio rate as the frontend's activities/calorieEstimate.ts. Strength
+    // workouts don't carry a duration (only total volume, see Workout.cs), so they get a flat
+    // per-session estimate instead of a rate.
+    private const double CardioCaloriesPerMinute = 8;
+    private const int StrengthWorkoutCalorieBonus = 200;
+
+    public static int Calculate(UserProfile profile, IReadOnlyCollection<Workout> todaysWorkouts)
     {
         if (profile.CalorieTarget is int ct and not 0)
             return ct;
@@ -42,13 +53,20 @@ public static class CalorieTargetCalculator
 
         var goalAdjustment = profile.Goal switch
         {
-            "lose-fat" => -500,
+            "lose-fat" => -(int)Math.Round(tdee * LoseFatDeficitShare),
             "gain-muscle" => 300,
             "recomp" => -200,
             _ => 0, // maintain or unset
         };
 
-        var calorieTarget = (int)Math.Round(tdee) + goalAdjustment;
+        var trainingBonus = todaysWorkouts.Sum(workout => workout.Type switch
+        {
+            "cardio" => (int)Math.Round((workout.Duration ?? 0) * CardioCaloriesPerMinute),
+            "strength" => StrengthWorkoutCalorieBonus,
+            _ => 0,
+        });
+
+        var calorieTarget = (int)Math.Round(tdee) + goalAdjustment + trainingBonus;
 
         return Math.Max(calorieTarget, MinimumCalorieTarget);
     }

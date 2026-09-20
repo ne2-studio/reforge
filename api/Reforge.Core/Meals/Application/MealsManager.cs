@@ -6,6 +6,8 @@ using Reforge.Core.Shared;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Subscriptions;
 using Reforge.Core.Subscriptions.Domain;
+using Reforge.Core.Workouts.Domain;
+using Reforge.Core.Workouts.OutputPorts;
 
 namespace Reforge.Core.Meals.Application;
 
@@ -13,6 +15,7 @@ public class MealsManager(
     ICurrentUserProvider currentUserProvider,
     IMealRepository mealRepository,
     IProfileRepository profileRepository,
+    IWorkoutRepository workoutRepository,
     IMealAnalysisBackend mealAnalysisBackend,
     IFeatureFlags featureFlags,
     ISubscriptionsUseCase subscriptionsUseCase,
@@ -113,14 +116,15 @@ public class MealsManager(
             dayMeals.Sum(m => m.Carbs),
             dayMeals.Sum(m => m.Fats));
 
-        var targets = CalculateTargets(profile);
+        var dayWorkouts = await workoutRepository.GetByUserIdAsync(userId);
+        var targets = CalculateTargets(profile, dayWorkouts.Where(w => DateOnly.FromDateTime(w.Timestamp) == date).ToList());
 
         return Result.Success(new DailyStatsDto(consumed, targets));
     }
 
-    private static MacroValuesDto CalculateTargets(UserProfile profile)
+    private static MacroValuesDto CalculateTargets(UserProfile profile, IReadOnlyCollection<Workout> dayWorkouts)
     {
-        var calorieTarget = CalorieTargetCalculator.Calculate(profile);
+        var calorieTarget = CalorieTargetCalculator.Calculate(profile, dayWorkouts);
         var weight = profile.Weight is double w and not 0 ? w : 70;
 
         double proteinPerKg;

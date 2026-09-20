@@ -8,6 +8,7 @@ using Reforge.Core.Shared;
 using Reforge.Core.Subscriptions.Application;
 using Reforge.Core.Subscriptions.Domain;
 using Reforge.Core.Tests.Fakes;
+using Reforge.Core.Workouts.Domain;
 using Reforge.Infra.Lite;
 
 namespace Reforge.Core.Tests.Meals;
@@ -22,6 +23,7 @@ public class MealsManagerTests
     private static MealsManager CreateManager(
         FakeMealRepository? mealRepository = null,
         FakeProfileRepository? profileRepository = null,
+        FakeWorkoutRepository? workoutRepository = null,
         FakeMealAnalysisBackend? analysisBackend = null,
         FakeFeatureFlags? featureFlags = null,
         FakeSubscriptionRepository? subscriptionRepository = null,
@@ -42,6 +44,7 @@ public class MealsManagerTests
             new FakeCurrentUserProvider(UserId),
             mealRepository ?? new FakeMealRepository(),
             profileRepository ?? new FakeProfileRepository(),
+            workoutRepository ?? new FakeWorkoutRepository(),
             analysisBackend ?? new FakeMealAnalysisBackend(),
             featureFlags ?? new FakeFeatureFlags(),
             subscriptionsManager,
@@ -201,20 +204,85 @@ public class MealsManagerTests
     }
 
     [Fact]
-    public async Task GetDailyStatsAsync_WhenTheComputedCalorieTargetWouldBeUnsafelyLow_ClampsToTheMinimum()
+    public async Task GetDailyStatsAsync_ForALoseFatGoal_AppliesA15PercentDeficitOfTdee()
     {
         var profileRepository = new FakeProfileRepository();
         profileRepository.Seed(new UserProfile(
             UserId, DateTime.UtcNow,
-            age: 25, gender: "female", height: 165, weight: 60, activityLevel: "sedentary", goal: "lose-fat"));
+            age: 37, gender: "male", height: 178, weight: 65, activityLevel: "sedentary", goal: "lose-fat"));
 
         var manager = CreateManager(profileRepository: profileRepository, nextId: Guid.NewGuid());
 
         var result = await manager.GetDailyStatsAsync(new DateOnly(2026, 3, 4));
 
         Assert.True(result.IsSuccess);
-        // BMR = 10*60 + 6.25*165 - 5*25 - 161 = 1345.25; TDEE = 1345.25 * 1.2 (sedentary) ≈
-        // 1614; minus the 500 kcal "lose-fat" deficit = 1114, below the 1200 kcal floor.
+        // BMR = 10*65 + 6.25*178 - 5*37 + 5 = 1582.5; TDEE = 1582.5 * 1.2 (sedentary) = 1899;
+        // minus a 15% deficit (≈285) = 1614.
+        Assert.Equal(1614, result.Value.Targets.Calories);
+    }
+
+    [Fact]
+    public async Task GetDailyStatsAsync_AddsATrainingBonus_ForWorkoutsLoggedOnTheRequestedDate()
+    {
+        var date = new DateOnly(2026, 3, 4);
+        var profileRepository = new FakeProfileRepository();
+        profileRepository.Seed(new UserProfile(
+            UserId, DateTime.UtcNow,
+            age: 37, gender: "male", height: 178, weight: 65, activityLevel: "sedentary", goal: "lose-fat"));
+
+        var workoutRepository = new FakeWorkoutRepository();
+        workoutRepository.Seed(new Workout(
+            Guid.NewGuid(), UserId, "cardio", timestamp: date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), duration: 40));
+        // A different day's workout must not count towards today's bonus.
+        workoutRepository.Seed(new Workout(
+            Guid.NewGuid(), UserId, "cardio", timestamp: date.AddDays(-1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), duration: 90));
+
+        var manager = CreateManager(profileRepository: profileRepository, workoutRepository: workoutRepository, nextId: Guid.NewGuid());
+
+        var result = await manager.GetDailyStatsAsync(date);
+
+        Assert.True(result.IsSuccess);
+        // Base target (see the 15%-deficit test above) is 1614; +40 min cardio * 8 kcal/min = 320.
+        Assert.Equal(1934, result.Value.Targets.Calories);
+    }
+
+    [Fact]
+    public async Task GetDailyStatsAsync_AddsAFlatTrainingBonus_ForAStrengthWorkout_SinceItHasNoDuration()
+    {
+        var date = new DateOnly(2026, 3, 4);
+        var profileRepository = new FakeProfileRepository();
+        profileRepository.Seed(new UserProfile(
+            UserId, DateTime.UtcNow,
+            age: 37, gender: "male", height: 178, weight: 65, activityLevel: "sedentary", goal: "lose-fat"));
+
+        var workoutRepository = new FakeWorkoutRepository();
+        workoutRepository.Seed(new Workout(
+            Guid.NewGuid(), UserId, "strength", timestamp: date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), volume: 2500));
+
+        var manager = CreateManager(profileRepository: profileRepository, workoutRepository: workoutRepository, nextId: Guid.NewGuid());
+
+        var result = await manager.GetDailyStatsAsync(date);
+
+        Assert.True(result.IsSuccess);
+        // Base target 1614 + flat 200 kcal strength-session bonus.
+        Assert.Equal(1814, result.Value.Targets.Calories);
+    }
+
+    [Fact]
+    public async Task GetDailyStatsAsync_WhenTheComputedCalorieTargetWouldBeUnsafelyLow_ClampsToTheMinimum()
+    {
+        var profileRepository = new FakeProfileRepository();
+        profileRepository.Seed(new UserProfile(
+            UserId, DateTime.UtcNow,
+            age: 30, gender: "female", height: 150, weight: 45, activityLevel: "sedentary", goal: "lose-fat"));
+
+        var manager = CreateManager(profileRepository: profileRepository, nextId: Guid.NewGuid());
+
+        var result = await manager.GetDailyStatsAsync(new DateOnly(2026, 3, 4));
+
+        Assert.True(result.IsSuccess);
+        // BMR = 10*45 + 6.25*150 - 5*30 - 161 = 1076.5; TDEE = 1076.5 * 1.2 (sedentary) ≈
+        // 1291.8; minus the 15% "lose-fat" deficit (≈194) = 1098, below the 1200 kcal floor.
         Assert.Equal(1200, result.Value.Targets.Calories);
     }
 
