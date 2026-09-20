@@ -7,8 +7,6 @@ import { useFeaturesStore } from '@/store/featuresStore';
 import { loadChatHistory, sendChatMessage } from '../useCases';
 import { CoachChat } from '../components/CoachChat';
 import { AILimitReached } from '@/features/subscription/components/AILimitReached';
-import { Button } from '@/design-system/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 
 // Container for /chat. Loads the caller's chat history on mount, wires sendChatMessage, reads
 // coachStore — mirrors MealsRoute's container-vs-presentational split (docs/architecture/
@@ -42,11 +40,8 @@ export function ChatRoute() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-8">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/comidas')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
-        </Button>
+      <div className="max-w-2xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold text-foreground">Coach IA</h1>
         <CoachChat messages={messages} isLoading={isLoading} onSendMessage={handleSendMessage} />
       </div>
       {subscriptionsEnabled && (
