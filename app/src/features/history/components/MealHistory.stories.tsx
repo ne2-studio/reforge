@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
 import { MealHistory } from './MealHistory';
 import { Meal } from '@/types';
 
@@ -35,16 +34,11 @@ const meals = [
 ];
 
 const meta = {
-  title: 'Features/DayClose/MealHistory',
+  title: 'Features/History/MealHistory',
   component: MealHistory,
   args: {
     meals: [],
     isLoading: false,
-    todayHasMeals: false,
-    isTodayClosed: false,
-    todayAnalysis: null,
-    isClosingToday: false,
-    onCloseDay: fn(),
   },
 } satisfies Meta<typeof MealHistory>;
 
@@ -56,29 +50,5 @@ export const Empty: Story = {};
 export const WithHistory: Story = {
   args: {
     meals,
-  },
-};
-
-export const ReadyToClose: Story = {
-  args: {
-    meals,
-    todayHasMeals: true,
-  },
-};
-
-export const TodayClosed: Story = {
-  args: {
-    meals,
-    todayHasMeals: true,
-    isTodayClosed: true,
-    todayAnalysis: '¡Buen trabajo hoy! Mantuviste el déficit calórico y comiste suficiente proteína.',
-  },
-};
-
-export const Closing: Story = {
-  args: {
-    meals,
-    todayHasMeals: true,
-    isClosingToday: true,
   },
 };

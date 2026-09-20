@@ -7,7 +7,7 @@ import { useSubscriptionStore } from '@/store/subscriptionStore';
 // index.ts's error-handling/store-update pattern: `load*` functions swallow their error into
 // the store's `error` field, mutating functions (checkout/confirm/portal/cancel) re-throw
 // after recording it, so a failed action doesn't silently look like nothing happened (same
-// reasoning as dayClose's closeDay).
+// reasoning as history's loadWeeklyProgress).
 //
 // Every function below except loadFeatures must only ever be called once
 // featuresStore.subscriptions is true — /api/subscription* genuinely doesn't exist
@@ -54,7 +54,7 @@ export async function startCheckout(): Promise<string> {
 }
 
 // Confirms a simulated checkout session, then reloads the subscription so callers immediately
-// see the caller's new Premium/Active tier — mirrors closeDay's own "mutate, then reload the
+// see the caller's new Premium/Active tier — mirrors loadWeeklyProgress's own "mutate, then reload the
 // dependent read state" shape.
 export async function confirmCheckout(sessionId: string): Promise<void> {
   useSubscriptionStore.setState({ isLoading: true, error: null });

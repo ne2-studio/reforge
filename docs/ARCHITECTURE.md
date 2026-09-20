@@ -18,8 +18,8 @@ between them:
 
 Reforge is a fitness and nutrition coaching app: a user logs **comidas** (meals) — manually for
 now, from their own **biblioteca de comidas** (meal library) or ad hoc — records **entrenamientos**
-(workouts) and other **actividades** (activities), tracks **mediciones** (measurements), and
-closes each day (**cierre del día**) to see weekly progress and keep a **racha** (streak) going.
+(workouts) and other **actividades** (activities), tracks **mediciones** (measurements), and sees
+weekly progress to keep a **racha** (streak) of days in calorie deficit going.
 AI-assisted meal analysis/coach chat and subscription billing are planned future slices, not part
 of the current scope — see [`plan/`](plan/) for the delivery roadmap.
 

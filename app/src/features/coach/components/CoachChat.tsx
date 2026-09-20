@@ -25,7 +25,7 @@ interface CoachChatProps {
 // the AI-usage-limit props/UI (`chatMessagesUsed`/`chatMessagesLimit`/`onUpgrade`/`isPro`,
 // Stripe/Slice 9, deferred), the `isDayClosureMessage` auto-save-to-`dailyMenu` branch (an
 // unported legacy concept with no equivalent in this migration — day-close already lives in
-// features/dayClose), and the `forwardRef`/`sendAutoMessage` imperative handle (nothing in this
+// features/history), and the `forwardRef`/`sendAutoMessage` imperative handle (nothing in this
 // slice's actual scope — just FloatingCoachButton opening /chat — needs to pre-fill and
 // auto-send a message, so it's left out per YAGNI rather than ported speculatively).
 export function CoachChat({ messages, isLoading, onSendMessage }: CoachChatProps) {

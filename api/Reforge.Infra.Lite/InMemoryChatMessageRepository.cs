@@ -5,8 +5,8 @@ using Reforge.Core.Chat.OutputPorts;
 namespace Reforge.Infra.Lite;
 
 // Registered as a Singleton (see ServiceRegistration.AddLiteInfrastructure) so state survives
-// across requests for the lifetime of the reforge-api-lite process — mirrors
-// InMemoryClosedDayRepository.
+// across requests for the lifetime of the reforge-api-lite process — mirrors the other
+// in-memory repositories.
 public class InMemoryChatMessageRepository : IChatMessageRepository
 {
     private readonly List<ChatMessage> _messages = [];

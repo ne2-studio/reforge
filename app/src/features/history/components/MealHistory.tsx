@@ -1,6 +1,5 @@
-import { Button } from '@/design-system/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/design-system/components/ui/card';
-import { CalendarCheck, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { Meal } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -20,11 +19,6 @@ interface MealDayGroup {
 interface MealHistoryProps {
   meals: Meal[];
   isLoading: boolean;
-  todayHasMeals: boolean;
-  isTodayClosed: boolean;
-  todayAnalysis: string | null;
-  isClosingToday: boolean;
-  onCloseDay: () => void;
 }
 
 function formatDayHeading(date: string): string {
@@ -63,46 +57,12 @@ function groupByDay(meals: Meal[]): MealDayGroup[] {
 }
 
 // Presentational — no react-router-dom/store/useCases imports. "Comidas" tab of /historial:
-// full meal history grouped by calendar day (most recent first), plus today's close-day
-// status — a "Cerrar día" button when today isn't closed yet and has meals logged (mirrors the
-// backend's own guard so the button doesn't need to 400 needlessly), or today's analysis text
-// once it is closed.
-export function MealHistory({
-  meals,
-  isLoading,
-  todayHasMeals,
-  isTodayClosed,
-  todayAnalysis,
-  isClosingToday,
-  onCloseDay,
-}: MealHistoryProps) {
+// full meal history grouped by calendar day (most recent first).
+export function MealHistory({ meals, isLoading }: MealHistoryProps) {
   const days = groupByDay(meals);
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarCheck className="h-5 w-5 text-primary" />
-            Cierre del día
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isTodayClosed && todayAnalysis !== null ? (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{todayAnalysis}</p>
-          ) : todayHasMeals ? (
-            <Button onClick={onCloseDay} disabled={isClosingToday} className="gap-2">
-              {isClosingToday ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Cerrar día
-            </Button>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Registra al menos una comida hoy para poder cerrar el día.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
       {isLoading && meals.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -25,7 +25,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 // (features/home), which loads dailyStats itself; logMeal/analyzeAndLogMeal below still
 // refresh the shared mealsStore.dailyStats after a save so that card stays current. Only shows
 // today's meals — full meal history, day-close, day history, and weekly progress live at
-// /historial (features/dayClose, Slice 7).
+// /historial (features/history, Slice 7).
 export function MealsRoute() {
   const navigate = useNavigate();
   const { meals, error } = useMealsStore();

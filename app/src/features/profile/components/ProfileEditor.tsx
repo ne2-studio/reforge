@@ -87,7 +87,7 @@ interface ProfileEditorProps {
 // Presentational — no react-router-dom/store/useCases imports. Read/edit view for an
 // already-saved profile. Ported from legacy/components/ProfileEditor.tsx, with
 // waist/neck/goalBodyFat/caloricPreference dropped (see OnboardingWizard's comment) and the
-// <DayHistory /> tab dropped entirely: that's Slice 7 (Day close), not built yet, and the
+// History tab dropped entirely: that's Slice 7 (History), not built yet at the time, and the
 // legacy component's Tabs/DayHistory imports were unused dead wiring anyway.
 //
 // Slice 6 (docs/plan/02-vertical-slices.md) adds a Recordatorios section below the profile

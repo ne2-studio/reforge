@@ -148,44 +148,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/close-day": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ClosedDayDto"];
-                        "application/json": components["schemas"]["ClosedDayDto"];
-                        "text/json": components["schemas"]["ClosedDayDto"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/day-history": {
+    "/api/features": {
         parameters: {
             query?: never;
             header?: never;
@@ -207,46 +170,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["ClosedDayDto"][];
-                        "application/json": components["schemas"]["ClosedDayDto"][];
-                        "text/json": components["schemas"]["ClosedDayDto"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/weekly-progress": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["WeeklyProgressDto"];
-                        "application/json": components["schemas"]["WeeklyProgressDto"];
-                        "text/json": components["schemas"]["WeeklyProgressDto"];
+                        "text/plain": components["schemas"]["FeaturesResponse"];
+                        "application/json": components["schemas"]["FeaturesResponse"];
+                        "text/json": components["schemas"]["FeaturesResponse"];
                     };
                 };
             };
@@ -898,6 +824,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/weekly-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WeeklyProgressDto"];
+                        "application/json": components["schemas"]["WeeklyProgressDto"];
+                        "text/json": components["schemas"]["WeeklyProgressDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/workouts": {
         parameters: {
             query?: never;
@@ -990,18 +953,6 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
-        ClosedDayDto: {
-            /** Format: date */
-            date?: string;
-            /** Format: date-time */
-            closedAt?: string;
-            /** Format: int32 */
-            totalCalories?: number;
-            /** Format: int32 */
-            mealsCount?: number;
-            isTrainingDay?: boolean;
-            analysis?: string | null;
-        };
         CustomReminderDto: {
             /** Format: uuid */
             id?: string;
@@ -1015,6 +966,9 @@ export interface components {
         DailyStatsDto: {
             consumed?: components["schemas"]["MacroValuesDto"];
             targets?: components["schemas"]["MacroValuesDto"];
+        };
+        FeaturesResponse: {
+            subscriptions?: boolean;
         };
         HealthResponse: {
             status?: string | null;
@@ -1213,7 +1167,6 @@ export interface components {
             deficit?: number;
             /** Format: int32 */
             mealsCount?: number;
-            isClosed?: boolean;
         };
         WeeklyProgressDto: {
             days?: components["schemas"]["WeeklyDayDto"][] | null;

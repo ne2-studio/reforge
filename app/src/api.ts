@@ -8,7 +8,7 @@ import { activitiesApi } from './api/resources/activities';
 import { workoutsApi } from './api/resources/workouts';
 import { measurementsApi } from './api/resources/measurements';
 import { remindersApi } from './api/resources/reminders';
-import { closedDaysApi } from './api/resources/closedDays';
+import { weeklyProgressApi } from './api/resources/weeklyProgress';
 import { coachApi } from './api/resources/coach';
 import { featuresApi } from './api/resources/features';
 import { subscriptionApi } from './api/resources/subscription';
@@ -24,7 +24,7 @@ export const api = {
   workouts: workoutsApi,
   measurements: measurementsApi,
   reminders: remindersApi,
-  closedDays: closedDaysApi,
+  weeklyProgress: weeklyProgressApi,
   coach: coachApi,
   features: featuresApi,
   subscription: subscriptionApi,

@@ -14,8 +14,6 @@ using Reforge.Core.Activities;
 using Reforge.Core.Activities.Application;
 using Reforge.Core.Chat;
 using Reforge.Core.Chat.Application;
-using Reforge.Core.ClosedDays;
-using Reforge.Core.ClosedDays.Application;
 using Reforge.Core.MealLibrary;
 using Reforge.Core.MealLibrary.Application;
 using Reforge.Core.Meals;
@@ -31,6 +29,8 @@ using Reforge.Core.Reminders.Application;
 using Reforge.Core.Shared;
 using Reforge.Core.Subscriptions;
 using Reforge.Core.Subscriptions.Application;
+using Reforge.Core.WeeklyProgress;
+using Reforge.Core.WeeklyProgress.Application;
 using Reforge.Core.Workouts;
 using Reforge.Core.Workouts.Application;
 using Reforge.Infra;
@@ -159,7 +159,7 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IWorkoutsUseCase, WorkoutsManager>();
         builder.Services.AddScoped<IMeasurementsUseCase, MeasurementsManager>();
         builder.Services.AddScoped<IRemindersUseCase, RemindersManager>();
-        builder.Services.AddScoped<IClosedDaysUseCase, ClosedDaysManager>();
+        builder.Services.AddScoped<IWeeklyProgressUseCase, WeeklyProgressManager>();
         builder.Services.AddScoped<IChatUseCase, ChatManager>();
         builder.Services.AddScoped<ISubscriptionsUseCase, SubscriptionsManager>();
 

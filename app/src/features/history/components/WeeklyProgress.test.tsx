@@ -12,7 +12,6 @@ const weeklyProgress = new WeeklyProgressData({
       consumedCalories: 2000,
       deficit: -200,
       mealsCount: 3,
-      isClosed: true,
     },
     {
       date: '2026-01-02',
@@ -20,7 +19,6 @@ const weeklyProgress = new WeeklyProgressData({
       consumedCalories: 2500,
       deficit: 300,
       mealsCount: 2,
-      isClosed: false,
     },
   ],
   totalDeficit: -1000,

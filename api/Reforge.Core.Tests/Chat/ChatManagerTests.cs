@@ -3,8 +3,6 @@ using Reforge.Core.Chat;
 using Reforge.Core.Chat.Application;
 using Reforge.Core.Chat.Domain;
 using Reforge.Core.Chat.OutputPorts;
-using Reforge.Core.ClosedDays.Application;
-using Reforge.Core.Meals.Domain;
 using Reforge.Core.Shared;
 using Reforge.Core.Subscriptions.Application;
 using Reforge.Core.Subscriptions.Domain;
@@ -14,11 +12,7 @@ using Reforge.Infra.Lite;
 namespace Reforge.Core.Tests.Chat;
 
 // Orchestration only — system-prompt construction is exercised indirectly (via what gets
-// recorded on FakeAiChatBackend.Calls), persistence and the "cerrar mi día" command handling are
-// exercised directly. IClosedDaysUseCase is the real ClosedDaysManager (not a fake/stub) wired
-// over the same fake repositories, per that interface's own doc comment: ChatManager is meant to
-// call CloseDayAsync, not duplicate its logic, so these tests prove that delegation actually
-// works rather than assuming it does.
+// recorded on FakeAiChatBackend.Calls); persistence is exercised directly.
 public class ChatManagerTests
 {
     private static readonly UserId UserId = new("auth0|chat-user");
@@ -27,7 +21,6 @@ public class ChatManagerTests
         FakeMealRepository? mealRepository = null,
         FakeProfileRepository? profileRepository = null,
         InMemoryChatMessageRepository? chatMessageRepository = null,
-        FakeClosedDayRepository? closedDayRepository = null,
         FakeAiChatBackend? aiChatBackend = null,
         FakeFeatureFlags? featureFlags = null,
         FakeSubscriptionRepository? subscriptionRepository = null,
@@ -36,15 +29,6 @@ public class ChatManagerTests
         Guid? nextId = null)
     {
         var clock = new FakeClock(now ?? new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc));
-        var closedDaysManager = new ClosedDaysManager(
-            new FakeCurrentUserProvider(UserId),
-            closedDayRepository ?? new FakeClosedDayRepository(),
-            mealRepository ?? new FakeMealRepository(),
-            new FakeWorkoutRepository(),
-            new FakeActivityRepository(),
-            profileRepository ?? new FakeProfileRepository(),
-            clock,
-            new FakeIdGenerator(Guid.NewGuid()));
 
         var subscriptionsManager = new SubscriptionsManager(
             new FakeCurrentUserProvider(UserId),
@@ -62,7 +46,6 @@ public class ChatManagerTests
             chatMessageRepository ?? new InMemoryChatMessageRepository(),
             mealRepository ?? new FakeMealRepository(),
             profileRepository ?? new FakeProfileRepository(),
-            closedDaysManager,
             aiChatBackend ?? new FakeAiChatBackend(),
             featureFlags ?? new FakeFeatureFlags(),
             subscriptionsManager,
@@ -128,61 +111,6 @@ public class ChatManagerTests
         Assert.True(result.IsFailure);
         Assert.Equal(ApplicationErrorCode.ExternalDependencyUnavailable, result.Error.Code);
         Assert.Empty(await chatMessageRepository.GetByUserIdAsync(UserId));
-    }
-
-    [Fact]
-    public async Task SendMessageAsync_WhenTheAiRepliesTheCloseDayCommand_ClosesTodayAndReturnsASuccessMessage()
-    {
-        var mealRepository = new FakeMealRepository();
-        var today = new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc);
-        mealRepository.Seed(new Meal(
-            Guid.NewGuid(), UserId, "Chicken and rice", "lunch", "13:00", calories: 600, protein: 50, carbs: 60, fats: 15,
-            timestamp: today, date: DateOnly.FromDateTime(today), createdAt: today));
-        var aiChatBackend = new FakeAiChatBackend { NextResult = Result.Success("COMANDO_CERRAR_DIA") };
-        var manager = CreateManager(mealRepository: mealRepository, aiChatBackend: aiChatBackend, now: today);
-
-        var result = await manager.SendMessageAsync(new SendChatMessageRequestDto("cierra mi día"));
-
-        Assert.True(result.IsSuccess);
-        Assert.Contains("¡Día cerrado con éxito!", result.Value);
-        Assert.Contains("600 calorías", result.Value);
-        Assert.DoesNotContain("COMANDO_CERRAR_DIA", result.Value);
-    }
-
-    [Fact]
-    public async Task SendMessageAsync_WhenTheAiRepliesTheCloseDayCommand_AndNoMealsAreLoggedToday_AsksForAMealFirst()
-    {
-        var aiChatBackend = new FakeAiChatBackend { NextResult = Result.Success("COMANDO_CERRAR_DIA") };
-        var manager = CreateManager(aiChatBackend: aiChatBackend);
-
-        var result = await manager.SendMessageAsync(new SendChatMessageRequestDto("cierra mi día"));
-
-        Assert.True(result.IsSuccess);
-        Assert.Contains("aún no tienes comidas registradas", result.Value);
-    }
-
-    [Fact]
-    public async Task SendMessageAsync_WhenTheAiRepliesTheCloseDayCommand_AndTodayIsAlreadyClosed_ReturnsTheExistingAnalysis()
-    {
-        var mealRepository = new FakeMealRepository();
-        var closedDayRepository = new FakeClosedDayRepository();
-        var today = new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc);
-        var todayDate = DateOnly.FromDateTime(today);
-        mealRepository.Seed(new Meal(
-            Guid.NewGuid(), UserId, "Chicken and rice", "lunch", "13:00", calories: 600, protein: 50, carbs: 60, fats: 15,
-            timestamp: today, date: todayDate, createdAt: today));
-        closedDayRepository.Seed(new Reforge.Core.ClosedDays.Domain.ClosedDay(
-            Guid.NewGuid(), UserId, todayDate, closedAt: today, totalCalories: 600, mealsCount: 1,
-            isTrainingDay: false, analysis: "Ya cerrado previamente."));
-        var aiChatBackend = new FakeAiChatBackend { NextResult = Result.Success("COMANDO_CERRAR_DIA") };
-        var manager = CreateManager(
-            mealRepository: mealRepository, closedDayRepository: closedDayRepository, aiChatBackend: aiChatBackend, now: today);
-
-        var result = await manager.SendMessageAsync(new SendChatMessageRequestDto("cierra mi día"));
-
-        Assert.True(result.IsSuccess);
-        Assert.Contains("Tu día ya está cerrado", result.Value);
-        Assert.Contains("Ya cerrado previamente.", result.Value);
     }
 
     [Fact]

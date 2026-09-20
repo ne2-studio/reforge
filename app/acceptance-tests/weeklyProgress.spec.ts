@@ -1,14 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { loginAs } from './helpers';
 
-// Slice 7's frontend acceptance criterion (docs/plan/02-vertical-slices.md): day close /
-// weekly progress. Mirrors measurements.spec.ts's scope and reasoning — logs a meal, closes
-// the day, and confirms it shows up in both the "Días cerrados" and "Progreso semanal" tabs of
-// /historial, surviving a reload. Uses "Reforge User" (not "Reforge User 2", which
-// meals.spec.ts/measurements.spec.ts/mealLibrary.spec.ts/workouts.spec.ts already use), and is
-// the only spec that calls POST /close-day for it, so there's no risk of a stale "already
-// closed today" from another spec sharing the same user.
-test('user logs a meal, closes the day, and sees it in day history and weekly progress', async ({ page }) => {
+// Slice 7's frontend acceptance criterion (docs/plan/02-vertical-slices.md): weekly progress.
+// Mirrors measurements.spec.ts's scope and reasoning — logs a meal and confirms it's reflected
+// in the "Progreso semanal" tab of /historial, surviving a reload. "Day close" was removed from
+// the product (formerly tested here as dayClose.spec.ts), so this only covers weekly progress.
+// Uses "Reforge User" (not "Reforge User 2", which meals.spec.ts/measurements.spec.ts/
+// mealLibrary.spec.ts/workouts.spec.ts already use).
+test('user logs a meal and sees it reflected in weekly progress', async ({ page }) => {
   const pageErrors: Error[] = [];
   page.on('pageerror', (err) => pageErrors.push(err));
 
@@ -27,13 +26,8 @@ test('user logs a meal, closes the day, and sees it in day history and weekly pr
   await page.goto('/historial');
 
   await expect(page.getByRole('heading', { name: 'Historial' })).toBeVisible();
-  await page.getByRole('button', { name: 'Cerrar día' }).click();
-
-  await expect(page.getByRole('button', { name: 'Cerrar día' })).not.toBeVisible();
-
-  await page.getByRole('tab', { name: 'Días cerrados' }).click();
-  await expect(page.getByText('600 kcal')).toBeVisible();
-  await expect(page.getByText('1 comida', { exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Cerrar día' })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'Días cerrados' })).toHaveCount(0);
 
   await page.getByRole('tab', { name: 'Progreso semanal' }).click();
   await expect(page.getByText('En déficit').or(page.getByText('En superávit'))).toBeVisible();
@@ -41,8 +35,8 @@ test('user logs a meal, closes the day, and sees it in day history and weekly pr
   await page.reload();
 
   await expect(page.getByRole('heading', { name: 'Historial' })).toBeVisible();
-  await page.getByRole('tab', { name: 'Días cerrados' }).click();
-  await expect(page.getByText('600 kcal')).toBeVisible();
+  await page.getByRole('tab', { name: 'Progreso semanal' }).click();
+  await expect(page.getByText('En déficit').or(page.getByText('En superávit'))).toBeVisible();
 
   expect(pageErrors, pageErrors.map(String).join('\n')).toEqual([]);
 });

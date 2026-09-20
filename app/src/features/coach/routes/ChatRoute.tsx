@@ -11,7 +11,7 @@ import { AILimitReached } from '@/features/subscription/components/AILimitReache
 // Container for /chat. Loads the caller's chat history on mount, wires sendChatMessage, reads
 // coachStore — mirrors MealsRoute's container-vs-presentational split (docs/architecture/
 // frontend.md). Errors from a failed send are toasted here, not swallowed into the store, same
-// reasoning as dayClose's useCases/closeDay — a failed send shouldn't silently look like nothing
+// reasoning as history's useCases/loadWeeklyProgress — a failed send shouldn't silently look like nothing
 // happened.
 //
 // Slice 9: a 403 on POST /api/chat means the caller's monthly AI usage limit was hit — but

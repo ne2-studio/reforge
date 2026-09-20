@@ -9,7 +9,7 @@ namespace Reforge.Infra.PersistenceTests;
 /// Slice 8 (docs/plan/02-vertical-slices.md): round-trip a real add+get, prove GetByUserIdAsync
 /// orders by Timestamp ascending (oldest first — the ordering ChatManager's system-prompt/
 /// history construction and GET /chat-history both rely on), and prove the repository is scoped
-/// to the correct userId. Same pattern as ClosedDayRepositoryTests.
+/// to the correct userId. Same pattern as MeasurementRepositoryTests.
 /// </summary>
 [Collection(PersistenceTestCollection.Name)]
 public class ChatMessageRepositoryTests(PostgresFixture fixture) : PersistenceTestBase(fixture)

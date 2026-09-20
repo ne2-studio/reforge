@@ -400,37 +400,6 @@ export class ChatMessage {
   }
 }
 
-// Wire shape of api/Reforge.Core/ClosedDays/IClosedDaysUseCase.cs's ClosedDayDto — field names
-// already match this class's own property names. `date` is a DateOnly (`yyyy-MM-dd`), `closedAt`
-// a full ISO 8601 timestamp — see that file's own doc-comment on why: date-close is a whole-day
-// concept, closedAt is just the audit trail of when the button was pressed.
-export interface ClosedDayDtoShape {
-  date: string;
-  closedAt: string;
-  totalCalories: number;
-  mealsCount: number;
-  isTrainingDay: boolean;
-  analysis: string;
-}
-
-export class ClosedDay {
-  readonly date: string;
-  readonly closedAt: Date;
-  readonly totalCalories: number;
-  readonly mealsCount: number;
-  readonly isTrainingDay: boolean;
-  readonly analysis: string;
-
-  constructor(data: ClosedDayDtoShape) {
-    this.date = data.date;
-    this.closedAt = new Date(data.closedAt);
-    this.totalCalories = data.totalCalories;
-    this.mealsCount = data.mealsCount;
-    this.isTrainingDay = data.isTrainingDay;
-    this.analysis = data.analysis;
-  }
-}
-
 // Wire shape of WeeklyDayDto — one day's row within WeeklyProgressDto's `days`. Kept as a plain
 // interface, not a class, since it's a passive data row with no derived behavior of its own
 // (same reasoning MacroValuesShape/DailyStatsDtoShape would use if MacroValues weren't already
@@ -441,7 +410,6 @@ export interface WeeklyDayDtoShape {
   consumedCalories: number;
   deficit: number;
   mealsCount: number;
-  isClosed: boolean;
 }
 
 // Wire shape of WeeklyProgressDto.

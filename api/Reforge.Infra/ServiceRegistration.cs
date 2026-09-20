@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reforge.Core.Activities.OutputPorts;
 using Reforge.Core.Chat.OutputPorts;
-using Reforge.Core.ClosedDays.OutputPorts;
 using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Measurements.OutputPorts;
@@ -36,7 +35,6 @@ public static class ServiceRegistration
         services.AddScoped<IMeasurementRepository, MeasurementRepository>();
         services.AddScoped<IReminderSettingsRepository, ReminderSettingsRepository>();
         services.AddScoped<ICustomReminderRepository, CustomReminderRepository>();
-        services.AddScoped<IClosedDayRepository, ClosedDayRepository>();
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ICheckoutSessionRepository, CheckoutSessionRepository>();

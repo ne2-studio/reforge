@@ -4,12 +4,12 @@ import { loginAs } from './helpers';
 // Slice 8's frontend acceptance criterion (docs/plan/02-vertical-slices.md): the AI coach chat.
 // The AI-driven meal-analysis path is covered by meals.spec.ts instead of here (see that
 // file's own comment): it persists a meal, and coach.spec.ts's filename sorts alphabetically
-// before both meals.spec.ts and dayClose.spec.ts, which each assert *exact* daily
+// before both meals.spec.ts and weeklyProgress.spec.ts, which each assert *exact* daily
 // totals/calorie counts for "Reforge User"/"Reforge User 2" — an extra meal landing before
 // either of those ran would silently inflate their totals. The chat test below has no such
 // risk: chat messages are a separate table from meals, so any user/order is safe. Reuses
-// "Reforge User" — arbitrarily, since this suite doesn't create profile/meal/day-close state
-// that any other spec depends on.
+// "Reforge User" — arbitrarily, since this suite doesn't create profile/meal state that any
+// other spec depends on.
 test('user chats with the coach and its reply survives a reload', async ({ page }) => {
   const pageErrors: Error[] = [];
   page.on('pageerror', (err) => pageErrors.push(err));

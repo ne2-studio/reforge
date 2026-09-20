@@ -8,7 +8,7 @@ namespace Reforge.Core.Chat.Domain;
 // written together, at the end of a single ChatManager.SendMessageAsync call (see that doc
 // comment for why the AI call itself isn't wrapped in the same DB transaction as the write). A
 // user has many chat messages — Id is a server-generated surrogate key, UserId is a plain
-// foreign-key-shaped field, same technique as Meal/ClosedDay.
+// foreign-key-shaped field, same technique as Meal/Workout.
 public sealed class ChatMessage
 {
     public Guid Id { get; }

@@ -13,7 +13,7 @@ public class ChatMessageConfiguration : IEntityTypeConfiguration<ChatMessage>
         builder.HasKey(m => m.Id);
 
         // Foreign-key-shaped field, not the primary key — a user has many chat messages. Same
-        // text/opaque-OIDC-sub mapping as ClosedDayConfiguration/MealConfiguration.
+        // text/opaque-OIDC-sub mapping as MeasurementConfiguration/MealConfiguration.
         builder.Property(m => m.UserId)
             .HasConversion(id => id.Value, value => new UserId(value))
             .HasColumnType("text")

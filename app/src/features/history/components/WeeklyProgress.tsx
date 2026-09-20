@@ -201,11 +201,6 @@ export function WeeklyProgress({ weeklyProgress, isLoading }: WeeklyProgressProp
                               Hoy
                             </span>
                           )}
-                          {day.isClosed && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                              Cerrado
-                            </span>
-                          )}
                         </div>
                         <span className="text-xs text-muted-foreground">
                           {day.mealsCount} {day.mealsCount === 1 ? 'comida' : 'comidas'}

@@ -15,7 +15,7 @@ import { MealLibraryRoute } from '@/features/mealLibrary/routes/MealLibraryRoute
 import { ActivityRoute } from '@/features/activities/routes/ActivityRoute';
 import { WorkoutRoute } from '@/features/workouts/routes/WorkoutRoute';
 import { ProgressRoute } from '@/features/measurements/routes/ProgressRoute';
-import { HistoryRoute } from '@/features/dayClose/routes/HistoryRoute';
+import { HistoryRoute } from '@/features/history/routes/HistoryRoute';
 import { ChatRoute } from '@/features/coach/routes/ChatRoute';
 import { SubscriptionRoute } from '@/features/subscription/routes/SubscriptionRoute';
 import { CheckoutRoute } from '@/features/subscription/routes/CheckoutRoute';

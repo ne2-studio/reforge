@@ -10,7 +10,7 @@ namespace Reforge.Core.Tests.Subscriptions;
 /// <summary>
 /// Slice 9 (docs/plan/02-vertical-slices.md): the fully faked Stripe checkout/cancel flow and the
 /// Free-tier usage-limit boundary. Fake-first, same pattern as ChatManagerTests/
-/// ClosedDaysManagerTests.
+/// WeeklyProgressManagerTests.
 /// </summary>
 public class SubscriptionsManagerTests
 {
