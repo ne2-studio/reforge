@@ -1,20 +1,19 @@
 import { Outlet } from 'react-router-dom';
+import { SidebarProvider, SidebarInset } from '@/design-system/components/ui/sidebar';
 import { Header } from './Header';
 import { Navigation } from './Navigation';
 
-// Shared shell for authenticated routes: the sticky Header, the fixed bottom/top nav from
-// Navigation (which assumes a 60px header above it on desktop — see its `md:top-[60px]`),
-// plus padding so page content never sits under either (24 = floating mobile bottom bar height
-// + its bottom margin, 37 = desktop header + top bar height, both in the same units Navigation
-// itself uses).
+// Shared shell for authenticated routes: a collapsible sidebar (Navigation, open by default on
+// desktop, an offcanvas sheet closed by default on mobile — see SidebarProvider) plus the
+// sticky Header and page content in the remaining column (SidebarInset).
 export function AppLayout() {
   return (
-    <>
-      <Header />
+    <SidebarProvider>
       <Navigation />
-      <div className="pb-24 md:pt-37 md:pb-0">
+      <SidebarInset>
+        <Header />
         <Outlet />
-      </div>
-    </>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

@@ -14,7 +14,8 @@ import { MealsRoute } from '@/features/meals/routes/MealsRoute';
 import { MealLibraryRoute } from '@/features/mealLibrary/routes/MealLibraryRoute';
 import { ActivityRoute } from '@/features/activities/routes/ActivityRoute';
 import { WorkoutRoute } from '@/features/workouts/routes/WorkoutRoute';
-import { ProgressRoute } from '@/features/measurements/routes/ProgressRoute';
+import { MeasurementsRoute } from '@/features/measurements/routes/MeasurementsRoute';
+import { WeeklySummaryRoute } from '@/features/measurements/routes/WeeklySummaryRoute';
 import { ChatRoute } from '@/features/coach/routes/ChatRoute';
 import { SubscriptionRoute } from '@/features/subscription/routes/SubscriptionRoute';
 import { CheckoutRoute } from '@/features/subscription/routes/CheckoutRoute';
@@ -81,7 +82,9 @@ function App() {
         <Route path="/biblioteca-comidas" element={<MealLibraryRoute />} />
         <Route path="/actividad" element={<ActivityRoute />} />
         <Route path="/entrenamientos" element={<WorkoutRoute />} />
-        <Route path="/progreso" element={<ProgressRoute />} />
+        <Route path="/progreso" element={<Navigate to="/progreso/medidas" replace />} />
+        <Route path="/progreso/medidas" element={<MeasurementsRoute />} />
+        <Route path="/progreso/semanal" element={<WeeklySummaryRoute />} />
         <Route path="/chat" element={<ChatRoute />} />
         <Route path="/suscripcion" element={subscriptionsEnabled ? <SubscriptionRoute /> : <Navigate to="/" replace />} />
         <Route

@@ -21,8 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   workouts, with a history list (activities) or stat cards and charts (workouts).
 - Progress tracking: log weight/waist/neck measurements and see stat cards and trend charts,
   including a body-fat % and lean-mass estimate computed from your profile once enough data is
-  available. The Progreso screen has two tabs: "Medidas y evolución" for this, and "Resumen
-  semanal" for your weekly calorie deficit/surplus summary and adherence streak.
+  available, plus a weekly calorie deficit/surplus summary and adherence streak under "Resumen
+  semanal".
 - Coach de IA: chatea con tu coach personal desde un botón flotante en Comidas, y registra una
   comida describiéndola en texto libre para que la IA calcule sus macros y la guarde por ti.
 - Suscripción Premium: consulta tu plan y tu uso de funciones de IA desde el perfil, mejora tu
@@ -45,6 +45,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   en la pantalla.
 - El menú de usuario ya no incluye el enlace a "Progreso semanal": ese contenido ahora vive
   como pestaña "Resumen semanal" dentro de la pantalla Progreso, junto a "Medidas y evolución".
+- La barra de navegación se sustituye por un menú lateral colapsable (abierto por defecto en
+  ordenador, cerrado en móvil) con un botón para mostrarlo u ocultarlo. La sección Progreso se
+  divide en dos entradas propias del menú, "Medidas y evolución" y "Resumen semanal", en lugar
+  de ser pestañas dentro de una única pantalla Progreso.
+- En la pantalla "Medidas y evolución", las 6 tarjetas de métricas se muestran en dos filas de
+  tres (antes una sola fila de seis) para que cada tarjeta tenga más espacio.
 
 ### Fixed
 

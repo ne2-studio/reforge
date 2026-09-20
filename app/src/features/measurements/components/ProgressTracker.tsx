@@ -174,7 +174,7 @@ export function ProgressTracker({ measurements, profile, isLoading, isSaving, on
       ) : (
         <>
           {latestMeasurement && (
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {profile?.goal && (
                 <Card className="border-2 border-primary/30 bg-primary/5">
                   <CardHeader className="pb-2">

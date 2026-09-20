@@ -13,7 +13,7 @@ test('user logs a measurement, and it survives a reload', async ({ page }) => {
   page.on('pageerror', (err) => pageErrors.push(err));
 
   await loginAs(page, 'Reforge User 2');
-  await page.getByRole('button', { name: 'Progreso' }).click();
+  await page.getByRole('button', { name: 'Medidas y evolución' }).click();
 
   await expect(page.getByRole('heading', { name: 'Tu progreso' })).toBeVisible();
   await expect(page.getByText('Aún no tienes medidas')).toBeVisible();

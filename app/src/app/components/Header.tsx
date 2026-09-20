@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import { Flame, User, Crown, LogOut } from 'lucide-react';
 import { Button } from '@/design-system/components/ui/button';
+import { SidebarTrigger } from '@/design-system/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/design-system/components/ui/avatar';
 import {
   DropdownMenu,
@@ -47,19 +48,22 @@ export function Header() {
   return (
     <div className="bg-card border-b border-border sticky top-0 z-10 backdrop-blur-lg bg-card/80 h-[60px]">
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/home')}>
-          <div className="bg-primary text-primary-foreground rounded-xl p-2 shadow-lg shadow-primary/50">
-            <Flame className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              Reforge
-            </h1>
-            {profile?.goal && (
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                {goalEmojis[profile.goal]} {goalLabels[profile.goal]}
-              </p>
-            )}
+        <div className="flex items-center gap-3">
+          <SidebarTrigger />
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/home')}>
+            <div className="bg-primary text-primary-foreground rounded-xl p-2 shadow-lg shadow-primary/50">
+              <Flame className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                Reforge
+              </h1>
+              {profile?.goal && (
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  {goalEmojis[profile.goal]} {goalLabels[profile.goal]}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
