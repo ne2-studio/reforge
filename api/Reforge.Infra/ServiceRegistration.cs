@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reforge.Core.Activities.OutputPorts;
+using Reforge.Core.Chat.OutputPorts;
 using Reforge.Core.ClosedDays.OutputPorts;
 using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
@@ -11,6 +12,9 @@ using Reforge.Core.Reminders.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
 using Reforge.Core.Workouts.OutputPorts;
+using Reforge.Infra.Chat;
+using Reforge.Infra.Meals;
+using Reforge.Infra.OpenAi;
 using Reforge.Infra.Persistence;
 
 namespace Reforge.Infra;
@@ -32,12 +36,20 @@ public static class ServiceRegistration
         services.AddScoped<IReminderSettingsRepository, ReminderSettingsRepository>();
         services.AddScoped<ICustomReminderRepository, CustomReminderRepository>();
         services.AddScoped<IClosedDayRepository, ClosedDayRepository>();
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserProvider, HttpContextCurrentUserProvider>();
+
+        // Slice 8 (docs/plan/02-vertical-slices.md): real OpenAI-backed adapters. See
+        // Reforge.Infra.Lite.ServiceRegistration for the fakes used by api-lite/automated tests —
+        // the real OpenAI API is never called from those (docs/plan/00-overview.md, decision 5).
+        services.Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
+        services.AddHttpClient<IAiChatBackend, OpenAiChatBackend>();
+        services.AddHttpClient<IMealAnalysisBackend, OpenAiMealAnalysisBackend>();
 
         return services;
     }

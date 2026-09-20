@@ -16,6 +16,14 @@ public interface IMealsUseCase
     /// <summary>Saves a manually-entered meal for the caller and returns it.</summary>
     Task<Result<MealDto>> SaveMealAsync(SaveMealRequestDto request);
 
+    /// <summary>Slice 8: analyzes a free-text meal description via IMealAnalysisBackend and saves
+    /// the resulting meal in the same call — one-shot, mirroring the source backend's
+    /// POST /analyze-meal (recomp-coach-backend/supabase/functions/server/routes/meals.ts).
+    /// Unlike SaveMealAsync, the caller never supplies macros — they come from the AI. Propagates
+    /// the analysis backend's failure (e.g. ExternalDependencyUnavailable) without saving
+    /// anything.</summary>
+    Task<Result<MealDto>> AnalyzeAndSaveMealAsync(AnalyzeMealRequestDto request);
+
     /// <summary>Consumed-vs-target macro totals for the given calendar date. Fails with NotFound
     /// if the caller has no profile yet — targets can't be computed without one.</summary>
     Task<Result<DailyStatsDto>> GetDailyStatsAsync(DateOnly date);
@@ -48,6 +56,10 @@ public record SaveMealRequestDto(
     int Fats,
     string? Feedback,
     Dictionary<string, object?>? ExtraData);
+
+// Slice 8's one-shot analyze-and-save request — deliberately has no macro fields, unlike
+// SaveMealRequestDto: those are produced by IMealAnalysisBackend, never supplied by the caller.
+public record AnalyzeMealRequestDto(string MealText, string Category, string Time);
 
 public record MacroValuesDto(int Calories, int Protein, int Carbs, int Fats);
 

@@ -14,7 +14,11 @@ namespace Reforge.Core.Tests;
 // Reforge.Core is organized per feature (Reforge.Core.<Feature>), each with its own
 // Application/ and OutputPorts/ sub-namespace; InputPorts live unsuffixed at the feature's root
 // namespace (e.g. Reforge.Core.Ping). Reforge.Domain is the cross-feature domain namespace
-// (e.g. UserId) shared by every port.
+// (e.g. UserId) shared by every port. Reforge.Core.Shared (Result/ApplicationError, the one
+// outcome vocabulary for the whole core — see that namespace's own doc comment) is excluded from
+// the InputPorts match even though it would otherwise fit the "Reforge.Core.<single word>"
+// shape: it's cross-cutting like Reforge.Domain, not a feature's input port, and both InputPorts
+// and OutputPorts (e.g. Slice 8's IAiChatBackend/IMealAnalysisBackend) legitimately depend on it.
 //
 // Wired even though there's only one feature (Ping) right now, so the rule is already in place
 // before the domain grows — mirrors el-baul's ArchitectureTests.
@@ -27,7 +31,7 @@ public class ArchitectureTests
 
     private readonly IObjectProvider<IType> InputPorts = Types()
         .That()
-        .ResideInNamespaceMatching(@"^Reforge\.Core\.[A-Za-z]+$")
+        .ResideInNamespaceMatching(@"^Reforge\.Core\.(?!Shared$)[A-Za-z]+$")
         .As("InputPorts");
 
     private readonly IObjectProvider<IType> OutputPorts = Types()

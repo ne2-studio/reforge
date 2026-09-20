@@ -33,6 +33,16 @@ public class MealsController(IMealsUseCase mealsUseCase) : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Slice 8: analyzes a free-text meal via the AI backend and saves it in the same
+    /// call — unlike POST /meals, which stays manual-entry only.</summary>
+    [HttpPost("analyze-meal")]
+    [ProducesResponseType(typeof(MealDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> PostAnalyzeMeal([FromBody] AnalyzeMealRequestDto request)
+    {
+        var result = await mealsUseCase.AnalyzeAndSaveMealAsync(request);
+        return result.ToActionResult();
+    }
+
     [HttpGet("daily-stats/{date}")]
     [ProducesResponseType(typeof(DailyStatsDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDailyStats([FromRoute] DateOnly date)

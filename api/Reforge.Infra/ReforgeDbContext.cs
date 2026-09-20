@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Reforge.Core.Activities.Domain;
+using Reforge.Core.Chat.Domain;
 using Reforge.Core.ClosedDays.Domain;
 using Reforge.Core.MealLibrary.Domain;
 using Reforge.Core.Meals.Domain;
@@ -23,6 +24,7 @@ public class ReforgeDbContext(DbContextOptions<ReforgeDbContext> options) : DbCo
     public DbSet<ReminderSettings> ReminderSettings => Set<ReminderSettings>();
     public DbSet<CustomReminder> CustomReminders => Set<CustomReminder>();
     public DbSet<ClosedDay> ClosedDays => Set<ClosedDay>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

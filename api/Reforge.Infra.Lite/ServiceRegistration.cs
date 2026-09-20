@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reforge.Core.Activities.OutputPorts;
+using Reforge.Core.Chat.OutputPorts;
 using Reforge.Core.ClosedDays.OutputPorts;
 using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
@@ -30,12 +31,19 @@ public static class ServiceRegistration
         services.AddSingleton<IReminderSettingsRepository, InMemoryReminderSettingsRepository>();
         services.AddSingleton<ICustomReminderRepository, InMemoryCustomReminderRepository>();
         services.AddSingleton<IClosedDayRepository, InMemoryClosedDayRepository>();
+        services.AddSingleton<IChatMessageRepository, InMemoryChatMessageRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserProvider, HttpContextCurrentUserProvider>();
+
+        // Slice 8 (docs/plan/00-overview.md, decision 5): fake AI backends, no network calls —
+        // used by api-lite and every automated test. Singleton like the in-memory repositories
+        // above (NextResult/NextAnalysis and Calls need to survive/be visible across requests).
+        services.AddSingleton<IAiChatBackend, FakeAiChatBackend>();
+        services.AddSingleton<IMealAnalysisBackend, FakeMealAnalysisBackend>();
 
         return services;
     }

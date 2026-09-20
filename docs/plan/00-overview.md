@@ -33,6 +33,17 @@ re-litigated without asking again:
    part of the walking skeleton or the initial core-domain slices. They come
    back as their own later slices once the skeleton and core domain are
    proven end-to-end.
+5. **Slice 8 (AI coach) OpenAI testing**: confirmed with the user on
+   2026-09-20 — mirror el-baul's `IAiChatBackend`/`FakeAiChatBackend`
+   pattern. Real OpenAI HTTP calls live behind output ports in
+   `Reforge.Infra`; `Reforge.Infra.Lite` (used by api-lite and unit/
+   acceptance tests) gets fake/stub implementations. The real OpenAI API is
+   never called from automated tests.
+6. **Slice 8 `/analyze-meal` design**: confirmed with the user on
+   2026-09-20 — one endpoint that analyzes and saves in the same call,
+   mirroring `recomp-coach-backend`'s one-shot behavior, using the same
+   meal-persistence path as `SaveMealAsync`. `POST /meals` is untouched and
+   keeps handling manual entries.
 
 ## Architecture target (mirrors el-baul)
 

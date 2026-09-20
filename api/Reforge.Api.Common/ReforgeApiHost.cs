@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Reforge.Core.Activities;
 using Reforge.Core.Activities.Application;
+using Reforge.Core.Chat;
+using Reforge.Core.Chat.Application;
 using Reforge.Core.ClosedDays;
 using Reforge.Core.ClosedDays.Application;
 using Reforge.Core.MealLibrary;
@@ -143,6 +145,7 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IMeasurementsUseCase, MeasurementsManager>();
         builder.Services.AddScoped<IRemindersUseCase, RemindersManager>();
         builder.Services.AddScoped<IClosedDaysUseCase, ClosedDaysManager>();
+        builder.Services.AddScoped<IChatUseCase, ChatManager>();
 
         var app = builder.Build();
 

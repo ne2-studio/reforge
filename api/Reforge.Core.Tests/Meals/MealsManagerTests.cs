@@ -2,9 +2,11 @@ using Reforge.Domain;
 using Reforge.Core.Meals;
 using Reforge.Core.Meals.Application;
 using Reforge.Core.Meals.Domain;
+using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Profiles.Domain;
 using Reforge.Core.Shared;
 using Reforge.Core.Tests.Fakes;
+using Reforge.Infra.Lite;
 
 namespace Reforge.Core.Tests.Meals;
 
@@ -27,6 +29,7 @@ public class MealsManagerTests
             new FakeCurrentUserProvider(UserId),
             repository,
             new FakeProfileRepository(),
+            new FakeMealAnalysisBackend(),
             new FakeClock(DateTime.UtcNow),
             new FakeIdGenerator(Guid.NewGuid()));
 
@@ -49,6 +52,7 @@ public class MealsManagerTests
             new FakeCurrentUserProvider(UserId),
             repository,
             new FakeProfileRepository(),
+            new FakeMealAnalysisBackend(),
             new FakeClock(now),
             new FakeIdGenerator(id));
 
@@ -84,6 +88,7 @@ public class MealsManagerTests
             new FakeCurrentUserProvider(UserId),
             new FakeMealRepository(),
             new FakeProfileRepository(),
+            new FakeMealAnalysisBackend(),
             new FakeClock(DateTime.UtcNow),
             new FakeIdGenerator(Guid.NewGuid()));
 
@@ -109,6 +114,7 @@ public class MealsManagerTests
             new FakeCurrentUserProvider(UserId),
             mealRepository,
             profileRepository,
+            new FakeMealAnalysisBackend(),
             new FakeClock(DateTime.UtcNow),
             new FakeIdGenerator(Guid.NewGuid()));
 
@@ -136,6 +142,7 @@ public class MealsManagerTests
             new FakeCurrentUserProvider(UserId),
             new FakeMealRepository(),
             profileRepository,
+            new FakeMealAnalysisBackend(),
             new FakeClock(DateTime.UtcNow),
             new FakeIdGenerator(Guid.NewGuid()));
 
@@ -158,6 +165,7 @@ public class MealsManagerTests
             new FakeCurrentUserProvider(UserId),
             new FakeMealRepository(),
             profileRepository,
+            new FakeMealAnalysisBackend(),
             new FakeClock(DateTime.UtcNow),
             new FakeIdGenerator(Guid.NewGuid()));
 
@@ -170,6 +178,94 @@ public class MealsManagerTests
         Assert.Equal(126, result.Value.Targets.Protein);
         Assert.Equal(223, result.Value.Targets.Carbs);
         Assert.Equal(67, result.Value.Targets.Fats);
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveMealAsync_AnalyzesViaTheBackend_AndSavesTheResultingMeal()
+    {
+        var mealRepository = new FakeMealRepository();
+        var analysisBackend = new FakeMealAnalysisBackend
+        {
+            NextAnalysis = Result.Success(new MealAnalysisDto(Calories: 620, Protein: 45, Carbs: 55, Fats: 18, Feedback: "Buen balance de macros"))
+        };
+        var now = new DateTime(2026, 3, 4, 12, 30, 0, DateTimeKind.Utc);
+        var id = Guid.NewGuid();
+
+        var manager = new MealsManager(
+            new FakeCurrentUserProvider(UserId),
+            mealRepository,
+            new FakeProfileRepository(),
+            analysisBackend,
+            new FakeClock(now),
+            new FakeIdGenerator(id));
+
+        var request = new AnalyzeMealRequestDto(MealText: "Chicken and rice", Category: "lunch", Time: "13:00");
+
+        var result = await manager.AnalyzeAndSaveMealAsync(request);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(id, result.Value.Id);
+        Assert.Equal(620, result.Value.Calories);
+        Assert.Equal(45, result.Value.Protein);
+        Assert.Equal(55, result.Value.Carbs);
+        Assert.Equal(18, result.Value.Fats);
+        Assert.Equal("Buen balance de macros", result.Value.Feedback);
+        Assert.Equal(DateOnly.FromDateTime(now), result.Value.Date);
+
+        var stored = await mealRepository.GetByUserIdAsync(UserId);
+        Assert.Single(stored);
+        Assert.Equal("Chicken and rice", stored[0].MealText);
+
+        var call = Assert.Single(analysisBackend.Calls);
+        Assert.Equal("Chicken and rice", call.MealText);
+        Assert.Equal("lunch", call.Category);
+        Assert.Null(call.Profile);
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveMealAsync_PassesTheCallersProfileAsContext_WhenOneExists()
+    {
+        var profileRepository = new FakeProfileRepository();
+        var profile = new UserProfile(UserId, DateTime.UtcNow, weight: 70, goal: "recomp");
+        profileRepository.Seed(profile);
+        var analysisBackend = new FakeMealAnalysisBackend();
+
+        var manager = new MealsManager(
+            new FakeCurrentUserProvider(UserId),
+            new FakeMealRepository(),
+            profileRepository,
+            analysisBackend,
+            new FakeClock(DateTime.UtcNow),
+            new FakeIdGenerator(Guid.NewGuid()));
+
+        await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
+
+        var call = Assert.Single(analysisBackend.Calls);
+        Assert.Equal(profile, call.Profile);
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveMealAsync_PropagatesTheBackendsFailure_AndSavesNothing()
+    {
+        var mealRepository = new FakeMealRepository();
+        var analysisBackend = new FakeMealAnalysisBackend
+        {
+            NextAnalysis = Result.Failure<MealAnalysisDto>(ApplicationError.ExternalDependencyUnavailable("Meal analysis is not configured."))
+        };
+
+        var manager = new MealsManager(
+            new FakeCurrentUserProvider(UserId),
+            mealRepository,
+            new FakeProfileRepository(),
+            analysisBackend,
+            new FakeClock(DateTime.UtcNow),
+            new FakeIdGenerator(Guid.NewGuid()));
+
+        var result = await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ApplicationErrorCode.ExternalDependencyUnavailable, result.Error.Code);
+        Assert.Empty(await mealRepository.GetByUserIdAsync(UserId));
     }
 
     private static Meal NewMeal(

@@ -90,6 +90,92 @@
         }
       }
     },
+    "/api/chat": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendChatMessageRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendChatMessageRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendChatMessageRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendChatMessageResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendChatMessageResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendChatMessageResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat-history": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatMessageDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatMessageDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatMessageDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/close-day": {
       "post": {
         "tags": [
@@ -378,6 +464,54 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/SaveMealRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analyze-meal": {
+      "post": {
+        "tags": [
+          "Meals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeMealRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeMealRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeMealRequestDto"
               }
             }
           }
@@ -988,6 +1122,46 @@
         },
         "additionalProperties": false
       },
+      "AnalyzeMealRequestDto": {
+        "type": "object",
+        "properties": {
+          "mealText": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "time": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatMessageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "assistantMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "ClosedDayDto": {
         "type": "object",
         "properties": {
@@ -1548,6 +1722,26 @@
         },
         "additionalProperties": false
       },
+      "SendChatMessageRequestDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendChatMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "reply": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateReminderSettingsRequestDto": {
         "type": "object",
         "properties": {
@@ -1667,6 +1861,9 @@
   "tags": [
     {
       "name": "Activities"
+    },
+    {
+      "name": "Chat"
     },
     {
       "name": "ClosedDays"

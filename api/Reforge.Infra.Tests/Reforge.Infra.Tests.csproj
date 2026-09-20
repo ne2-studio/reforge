@@ -1,5 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    Deliberately excluded from Reforge.Api.slnx (mirrors Reforge.Infra.PersistenceTests'
+    convention of keeping infra-adapter tests with real external dependencies out of the main
+    solution): unlike PersistenceTests this one needs no Docker daemon — WireMock.Net runs
+    in-process — but it's still kept separate so `./scripts/verify backend` can address exactly
+    the projects it needs without implicitly growing scope every time a new infra adapter gets
+    its own HTTP-fake test project.
+  -->
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -11,7 +20,7 @@
     <PackageReference Include="coverlet.collector" Version="10.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageReference Include="NSubstitute" Version="6.2.0" />
-    <PackageReference Include="TngTech.ArchUnitNET.xUnit" Version="0.13.3" />
+    <PackageReference Include="WireMock.Net" Version="2.15.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
   </ItemGroup>
@@ -21,11 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Reforge.Core\Reforge.Core.csproj" />
-    <!-- Reuses Reforge.Infra.Lite's fake AI backends (FakeAiChatBackend/FakeMealAnalysisBackend)
-         so unit tests script the same fakes api-lite uses, instead of duplicating them —
-         mirrors el-baul's ElBaul.Tests reference to ElBaul.Infra.Lite. -->
-    <ProjectReference Include="..\Reforge.Infra.Lite\Reforge.Infra.Lite.csproj" />
+    <ProjectReference Include="..\Reforge.Infra\Reforge.Infra.csproj" />
   </ItemGroup>
 
 </Project>

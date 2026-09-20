@@ -65,14 +65,34 @@ shippable and leaves the app working.
   note), `GET /weekly-progress`.
 - `app`: `DayHistory`, `MealHistory`, weekly progress views.
 
-## Slice 8 — AI coach (deferred scope, revisit after slice 7)
+## Slice 8 — AI coach
 
-- `api`: `POST /analyze-meal`, `POST /chat`, `GET /chat-history`, backed by
-  OpenAI. Needs a decision on how OpenAI calls are tested (fake/stub
-  adapter in api-lite and in unit tests; never call the real OpenAI API in
-  automated tests) — raise with user before starting.
+Design confirmed with the user on 2026-09-20 (see `00-overview.md` locked
+decisions 5 and 6):
+
+- `api`:
+  - `IMealAnalysisBackend` and `IAiChatBackend` output ports in
+    `Reforge.Core` (mirrors el-baul's `IAiChatBackend`). Real
+    `OpenAiMealAnalysisBackend`/`OpenAiChatBackend` adapters in
+    `Reforge.Infra` call the OpenAI HTTP API directly (same shape as
+    el-baul's `OpenAiChatBackend`). `Reforge.Infra.Lite` gets
+    `FakeMealAnalysisBackend`/`FakeAiChatBackend` — in-memory, scriptable
+    results, no network calls — registered in api-lite and used by unit/
+    acceptance tests. The real OpenAI API is never hit from automated tests.
+  - `POST /analyze-meal`: one call that analyzes via
+    `IMealAnalysisBackend` and saves the resulting meal through the same
+    persistence path as `MealsManager.SaveMealAsync`, mirroring
+    `recomp-coach-backend`'s one-shot behavior. `POST /meals` is unchanged
+    (manual entries).
+  - `POST /chat`, `GET /chat-history`: new `Chat` feature (manager, chat
+    message repository, EF Core adapter) carrying the system-prompt/context
+    construction (profile, today's meals, closed-day status, recent
+    history) from `routes/chat.ts`. The "cerrar mi día" command calls
+    `IClosedDaysUseCase.CloseDayAsync()` instead of duplicating close-day
+    logic (per that interface's doc comment).
 - `app`: `CoachChat`, `FloatingCoachButton`, AI-driven meal analysis in
-  `MealLogger`.
+  `MealLogger`, wired to the new endpoints via the generated OpenAPI
+  schema.
 
 ## Slice 9 — Subscription & billing (deferred scope, revisit after slice 8)
 

@@ -225,6 +225,12 @@ backend() {
   else
     run dotnet test "$ROOT_DIR/api/Reforge.Api.slnx" --configuration Release --no-build
   fi
+
+  # Reforge.Infra.Tests (Slice 8: OpenAiChatBackend/OpenAiMealAnalysisBackend against a fake
+  # WireMock.Net HTTP server) is deliberately excluded from Reforge.Api.slnx — see its own
+  # doc comment — but needs no Docker daemon, so it's run here rather than folded into
+  # backend_persistence/backend_acceptance below.
+  run dotnet test "$ROOT_DIR/api/Reforge.Infra.Tests/Reforge.Infra.Tests.csproj" --configuration Release
 }
 
 backend_persistence() {

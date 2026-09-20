@@ -11,6 +11,7 @@ public class MealsManager(
     ICurrentUserProvider currentUserProvider,
     IMealRepository mealRepository,
     IProfileRepository profileRepository,
+    IMealAnalysisBackend mealAnalysisBackend,
     IClock clock,
     IIdGenerator idGenerator) : IMealsUseCase
 {
@@ -40,6 +41,39 @@ public class MealsManager(
             createdAt: now,
             feedback: request.Feedback,
             extraData: request.ExtraData);
+
+        await mealRepository.AddAsync(meal);
+
+        return Result.Success(ToDto(meal));
+    }
+
+    public async Task<Result<MealDto>> AnalyzeAndSaveMealAsync(AnalyzeMealRequestDto request)
+    {
+        var userId = currentUserProvider.GetUserId();
+        // Profile is optional context for the AI, same as recomp-coach-backend's
+        // routes/meals.ts /analyze-meal handler — never fail here just because it's missing.
+        var profile = await profileRepository.GetByUserIdAsync(userId);
+
+        var analysisResult = await mealAnalysisBackend.AnalyzeAsync(request.MealText, request.Category, profile);
+        if (analysisResult.IsFailure)
+            return Result.Failure<MealDto>(analysisResult.Error);
+
+        var analysis = analysisResult.Value;
+        var now = clock.UtcNow();
+        var meal = new Meal(
+            idGenerator.NewId(),
+            userId,
+            request.MealText,
+            request.Category,
+            request.Time,
+            analysis.Calories,
+            analysis.Protein,
+            analysis.Carbs,
+            analysis.Fats,
+            timestamp: now,
+            date: DateOnly.FromDateTime(now),
+            createdAt: now,
+            feedback: analysis.Feedback);
 
         await mealRepository.AddAsync(meal);
 
