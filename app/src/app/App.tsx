@@ -13,6 +13,7 @@ import { ActivityRoute } from '@/features/activities/routes/ActivityRoute';
 import { WorkoutRoute } from '@/features/workouts/routes/WorkoutRoute';
 import { ProgressRoute } from '@/features/measurements/routes/ProgressRoute';
 import { HistoryRoute } from '@/features/dayClose/routes/HistoryRoute';
+import { ChatRoute } from '@/features/coach/routes/ChatRoute';
 
 // Owns routing, the auth redirect gate, and pushing the OIDC access token into api.ts on
 // every auth-state change — see docs/architecture/frontend.md.
@@ -99,6 +100,14 @@ function App() {
         element={
           <ProtectedRoute>
             <HistoryRoute />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <ChatRoute />
           </ProtectedRoute>
         }
       />

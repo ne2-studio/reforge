@@ -65,6 +65,23 @@ describe('mealsApi', () => {
     expect(meal.id).toBe('meal-1');
   });
 
+  it('analyzeMeal posts to /api/analyze-meal and hydrates the response', async () => {
+    vi.mocked(post).mockResolvedValue(mealDto);
+
+    const meal = await mealsApi.analyzeMeal({
+      mealText: 'Chicken and rice',
+      category: 'lunch',
+      time: '13:00',
+    });
+
+    expect(post).toHaveBeenCalledWith('/api/analyze-meal', {
+      mealText: 'Chicken and rice',
+      category: 'lunch',
+      time: '13:00',
+    });
+    expect(meal.id).toBe('meal-1');
+  });
+
   it('getDailyStats hydrates a DailyStats from GET /api/daily-stats/{date}', async () => {
     vi.mocked(get).mockResolvedValue(dailyStatsDto);
 

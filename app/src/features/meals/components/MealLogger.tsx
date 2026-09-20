@@ -13,8 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/design-system/components/ui/dialog';
-import { Utensils, Clock, Check, Loader2, BookMarked, BookOpen } from 'lucide-react';
-import type { MealLibraryItem, SaveMealData, SaveMealLibraryItemData } from '@/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/design-system/components/ui/tabs';
+import { Utensils, Clock, Check, Loader2, BookMarked, BookOpen, Sparkles } from 'lucide-react';
+import type { AnalyzeMealData, MealLibraryItem, SaveMealData, SaveMealLibraryItemData } from '@/types';
 
 const CATEGORIES = [
   { value: 'breakfast', label: '🌅 Desayuno' },
@@ -68,25 +69,64 @@ interface MealLoggerProps {
   // (e.g. in isolation in a story/test) without a library in scope yet.
   libraryItems?: MealLibraryItem[];
   onSaveToLibrary?: (data: SaveMealLibraryItemData) => void;
+  // Slice 8 (AI coach) wiring — both optional, same reasoning as the library props above: this
+  // component still works standalone without the AI-analysis mode wired up. When provided, a
+  // "Analizar con IA" tab appears alongside the existing manual-entry form.
+  isAnalyzing?: boolean;
+  onAnalyze?: (data: AnalyzeMealData) => void;
 }
 
 function emptyLibraryFields(): { title: string; description: string; calories: string; protein: string; carbs: string; fats: string } {
   return { title: '', description: '', calories: '', protein: '', carbs: '', fats: '' };
 }
 
-// Presentational — no react-router-dom/store/useCases imports. Manual-entry-only meal form,
-// ported from reforge-frontend/src/components/MealLogger.tsx's `"manual"` mode: the `"new"`
-// (AI text analysis) tab is dropped entirely, since it doesn't exist yet (Slice 8/9), and so
-// are the AI-usage-limit props that only made sense alongside it. The source's `"library"` tab
-// is folded into this manual form instead of being a separate mode: a "cargar de biblioteca"
-// picker pre-fills these same fields, and a "guardar en biblioteca" dialog reads them back out
-// — both stay presentational (no store/useCases import here), calling `onSaveToLibrary` for
-// the actual mutation, which MealsRoute wires to the mealLibrary useCase/toast, matching the
-// existing onSave/handleSave split between this component and its Route.
-export function MealLogger({ isSaving, onSave, libraryItems = [], onSaveToLibrary }: MealLoggerProps) {
+interface AiFields {
+  mealText: string;
+  category: string;
+  time: string;
+}
+
+function emptyAiFields(): AiFields {
+  return { mealText: '', category: getDefaultCategory(), time: getDefaultTime() };
+}
+
+// Presentational — no react-router-dom/store/useCases imports. Ported from
+// reforge-frontend/src/components/MealLogger.tsx, with two modes as a `Tabs` toggle instead of
+// the source's three (`"manual"`/`"library"`/`"new"`):
+// - "Manual": the original manual macro-entry form. The source's `"library"` tab is folded
+//   into it instead of being a separate mode: a "cargar de biblioteca" picker pre-fills these
+//   same fields, and a "guardar en biblioteca" dialog reads them back out — both stay
+//   presentational, calling `onSaveToLibrary` for the actual mutation, which MealsRoute wires
+//   to the mealLibrary useCase/toast, matching the existing onSave/handleSave split between
+//   this component and its Route.
+// - "Analizar con IA" (Slice 8): ports the source's `"new"` mode — free-text meal description,
+//   category, time, no macro inputs, since `POST /analyze-meal` derives them. Calls `onAnalyze`,
+//   which MealsRoute wires to the meals useCase's `analyzeAndLogMeal`. The AI-usage-limit props
+//   that accompanied the source's `"new"` mode are dropped entirely (Stripe/Slice 9, deferred).
+export function MealLogger({
+  isSaving,
+  onSave,
+  libraryItems = [],
+  onSaveToLibrary,
+  isAnalyzing = false,
+  onAnalyze,
+}: MealLoggerProps) {
   const [fields, setFields] = useState<ManualFields>(emptyFields);
   const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false);
   const [libraryFields, setLibraryFields] = useState(emptyLibraryFields);
+  const [aiFields, setAiFields] = useState<AiFields>(emptyAiFields);
+
+  const updateAiField = (field: keyof AiFields, value: string) => {
+    setAiFields({ ...aiFields, [field]: value });
+  };
+
+  const isAiValid = aiFields.mealText.trim() !== '';
+
+  const handleAnalyze = () => {
+    if (!isAiValid || !onAnalyze) return;
+    onAnalyze({ mealText: aiFields.mealText, category: aiFields.category, time: aiFields.time });
+    setAiFields(emptyAiFields());
+  };
 
   const updateField = (field: keyof ManualFields, value: string) => {
     setFields({ ...fields, [field]: value });
@@ -172,142 +212,210 @@ export function MealLogger({ isSaving, onSave, libraryItems = [], onSaveToLibrar
           <Utensils className="h-5 w-5 text-primary" />
           Registrar comida
         </CardTitle>
-        <CardDescription>Introduce los valores nutricionales manualmente</CardDescription>
+        <CardDescription>Registra tu comida manualmente o analízala con IA</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {libraryItems.length > 0 && (
-          <div className="space-y-2">
-            <Label htmlFor="loadFromLibrary">Cargar de biblioteca</Label>
-            <Select onValueChange={handleLoadFromLibrary}>
-              <SelectTrigger id="loadFromLibrary" className="h-12">
-                <SelectValue placeholder="Selecciona una comida guardada" />
-              </SelectTrigger>
-              <SelectContent>
-                {libraryItems.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <Tabs defaultValue="manual">
+          <TabsList>
+            <TabsTrigger value="manual">Manual</TabsTrigger>
+            <TabsTrigger value="ai">Analizar con IA</TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="category">Tipo</Label>
-            <Select value={fields.category} onValueChange={(v) => updateField('category', v)}>
-              <SelectTrigger id="category" className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="time">Hora</Label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-              <input
-                id="time"
-                type="time"
-                value={fields.time}
-                onChange={(e) => updateField('time', e.target.value)}
-                className="w-full h-12 pl-11 pr-3 border-2 border-input rounded-lg bg-input text-foreground focus:border-primary focus:outline-none"
+          <TabsContent value="manual" className="space-y-4">
+            {libraryItems.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="loadFromLibrary">Cargar de biblioteca</Label>
+                <Select onValueChange={handleLoadFromLibrary}>
+                  <SelectTrigger id="loadFromLibrary" className="h-12">
+                    <SelectValue placeholder="Selecciona una comida guardada" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {libraryItems.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Tipo</Label>
+                <Select value={fields.category} onValueChange={(v) => updateField('category', v)}>
+                  <SelectTrigger id="category" className="h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">Hora</Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                  <input
+                    id="time"
+                    type="time"
+                    value={fields.time}
+                    onChange={(e) => updateField('time', e.target.value)}
+                    className="w-full h-12 pl-11 pr-3 border-2 border-input rounded-lg bg-input text-foreground focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mealText">Descripción</Label>
+              <Textarea
+                id="mealText"
+                placeholder='Ej: "2 huevos revueltos con aguacate y 2 tostadas"'
+                value={fields.mealText}
+                onChange={(e) => updateField('mealText', e.target.value)}
+                rows={3}
+                className="resize-none"
               />
             </div>
-          </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="mealText">Descripción</Label>
-          <Textarea
-            id="mealText"
-            placeholder='Ej: "2 huevos revueltos con aguacate y 2 tostadas"'
-            value={fields.mealText}
-            onChange={(e) => updateField('mealText', e.target.value)}
-            rows={3}
-            className="resize-none"
-          />
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="calories">Calorías (kcal)</Label>
+                <Input
+                  id="calories"
+                  type="number"
+                  step="1"
+                  placeholder="500"
+                  value={fields.calories}
+                  onChange={(e) => updateField('calories', e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="protein">Proteína (g)</Label>
+                <Input
+                  id="protein"
+                  type="number"
+                  step="0.1"
+                  placeholder="30"
+                  value={fields.protein}
+                  onChange={(e) => updateField('protein', e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="carbs">Carbohidratos (g)</Label>
+                <Input
+                  id="carbs"
+                  type="number"
+                  step="0.1"
+                  placeholder="50"
+                  value={fields.carbs}
+                  onChange={(e) => updateField('carbs', e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fats">Grasas (g)</Label>
+                <Input
+                  id="fats"
+                  type="number"
+                  step="0.1"
+                  placeholder="15"
+                  value={fields.fats}
+                  onChange={(e) => updateField('fats', e.target.value)}
+                  className="h-12"
+                />
+              </div>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="calories">Calorías (kcal)</Label>
-            <Input
-              id="calories"
-              type="number"
-              step="1"
-              placeholder="500"
-              value={fields.calories}
-              onChange={(e) => updateField('calories', e.target.value)}
-              className="h-12"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="protein">Proteína (g)</Label>
-            <Input
-              id="protein"
-              type="number"
-              step="0.1"
-              placeholder="30"
-              value={fields.protein}
-              onChange={(e) => updateField('protein', e.target.value)}
-              className="h-12"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="carbs">Carbohidratos (g)</Label>
-            <Input
-              id="carbs"
-              type="number"
-              step="0.1"
-              placeholder="50"
-              value={fields.carbs}
-              onChange={(e) => updateField('carbs', e.target.value)}
-              className="h-12"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="fats">Grasas (g)</Label>
-            <Input
-              id="fats"
-              type="number"
-              step="0.1"
-              placeholder="15"
-              value={fields.fats}
-              onChange={(e) => updateField('fats', e.target.value)}
-              className="h-12"
-            />
-          </div>
-        </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSave} className="flex-1 h-12" disabled={isSaving || !isValid}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-5 w-5" />
+                    Guardar comida
+                  </>
+                )}
+              </Button>
+              {onSaveToLibrary && (
+                <Button type="button" variant="outline" className="h-12" onClick={openLibraryDialog}>
+                  <BookMarked className="mr-2 h-5 w-5" />
+                  Guardar en biblioteca
+                </Button>
+              )}
+            </div>
+          </TabsContent>
 
-        <div className="flex gap-2">
-          <Button onClick={handleSave} className="flex-1 h-12" disabled={isSaving || !isValid}>
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Guardando...
-              </>
-            ) : (
-              <>
-                <Check className="mr-2 h-5 w-5" />
-                Guardar comida
-              </>
-            )}
-          </Button>
-          {onSaveToLibrary && (
-            <Button type="button" variant="outline" className="h-12" onClick={openLibraryDialog}>
-              <BookMarked className="mr-2 h-5 w-5" />
-              Guardar en biblioteca
+          <TabsContent value="ai" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="aiCategory">Tipo</Label>
+                <Select value={aiFields.category} onValueChange={(v) => updateAiField('category', v)}>
+                  <SelectTrigger id="aiCategory" className="h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="aiTime">Hora</Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                  <input
+                    id="aiTime"
+                    type="time"
+                    value={aiFields.time}
+                    onChange={(e) => updateAiField('time', e.target.value)}
+                    className="w-full h-12 pl-11 pr-3 border-2 border-input rounded-lg bg-input text-foreground focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="aiMealText">Descripción</Label>
+              <Textarea
+                id="aiMealText"
+                placeholder='Ej: "2 huevos revueltos con aguacate y 2 tostadas"'
+                value={aiFields.mealText}
+                onChange={(e) => updateAiField('mealText', e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+
+            <Button onClick={handleAnalyze} className="w-full h-12" disabled={isAnalyzing || !isAiValid}>
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Analizando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Analizar y guardar
+                </>
+              )}
             </Button>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
 
       <Dialog open={isLibraryDialogOpen} onOpenChange={setIsLibraryDialogOpen}>

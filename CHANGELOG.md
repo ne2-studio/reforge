@@ -27,3 +27,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Cierre del día: cierra tu día manualmente y consulta su resumen (comidas registradas, calorías
   totales y si fue día de entrenamiento) en tu historial, más tu progreso semanal de déficit y
   superávit calórico con la racha de días en déficit.
+- Coach de IA: chatea con tu coach personal desde un botón flotante en Comidas, y registra una
+  comida describiéndola en texto libre para que la IA calcule sus macros y la guarde por ti.

@@ -62,3 +62,30 @@ test('user logs a manual meal, sees it reflected in daily-stats, and it survives
 
   expect(pageErrors, pageErrors.map(String).join('\n')).toEqual([]);
 });
+
+// Slice 8's frontend acceptance criterion (docs/plan/02-vertical-slices.md): AI-driven meal
+// analysis (`POST /analyze-meal`). Kept in this file rather than coach.spec.ts, and appended
+// after the manual-meal test above rather than as its own top-level spec, specifically so it
+// runs *after* that test's exact daily-stats totals have already been asserted — Reforge.Api.
+// Lite's FakeMealAnalysisBackend (docs/operations/api-lite.md) always returns the same fixed
+// macros, so this test's own assertions below are on that meal specifically, not on the day's
+// running totals (which now also include the manual meal from the test above).
+test('user logs a meal via AI analysis, and it is saved with the backend-computed macros', async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on('pageerror', (err) => pageErrors.push(err));
+
+  await loginAs(page, 'Reforge User 2');
+  await page.goto('/comidas');
+
+  await expect(page.getByRole('heading', { name: 'Comidas', exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: 'Analizar con IA' }).click();
+
+  await page.getByLabel('Descripción').fill('2 huevos revueltos con aguacate y 2 tostadas');
+  await page.getByRole('button', { name: 'Analizar y guardar' }).click();
+
+  await expect(page.getByText('2 huevos revueltos con aguacate y 2 tostadas')).toBeVisible();
+  await expect(page.getByText('500 kcal')).toBeVisible();
+  await expect(page.getByText('30g proteína')).toBeVisible();
+
+  expect(pageErrors, pageErrors.map(String).join('\n')).toEqual([]);
+});

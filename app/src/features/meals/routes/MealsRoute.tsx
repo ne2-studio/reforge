@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useMealsStore } from '@/store/mealsStore';
 import { useMealLibraryStore } from '@/store/mealLibraryStore';
-import { loadMeals, loadDailyStats, logMeal, todayDateString } from '../useCases';
+import { loadMeals, loadDailyStats, logMeal, analyzeAndLogMeal, todayDateString } from '../useCases';
 import { loadLibrary, saveToLibrary } from '@/features/mealLibrary/useCases';
 import { DailyStats } from '../components/DailyStats';
 import { MealLogger } from '../components/MealLogger';
-import type { SaveMealData, SaveMealLibraryItemData } from '@/types';
+import { FloatingCoachButton } from '@/features/coach/components/FloatingCoachButton';
+import type { AnalyzeMealData, SaveMealData, SaveMealLibraryItemData } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   breakfast: 'Desayuno',
@@ -22,9 +24,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 // apply here). Only shows today's meals — full meal history, day-close, day history, and
 // weekly progress live at /historial (features/dayClose, Slice 7).
 export function MealsRoute() {
+  const navigate = useNavigate();
   const { meals, dailyStats, isLoading, error } = useMealsStore();
   const { items: libraryItems } = useMealLibraryStore();
   const [isSaving, setIsSaving] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     void loadMeals();
@@ -44,6 +48,18 @@ export function MealsRoute() {
       toast.error(err instanceof Error ? err.message : 'Error al guardar la comida');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleAnalyze = async (data: AnalyzeMealData) => {
+    setIsAnalyzing(true);
+    try {
+      await analyzeAndLogMeal(data);
+      toast.success('¡Comida analizada y guardada! ✅');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al analizar la comida');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -85,6 +101,8 @@ export function MealsRoute() {
           onSave={handleSave}
           libraryItems={libraryItems}
           onSaveToLibrary={handleSaveToLibrary}
+          isAnalyzing={isAnalyzing}
+          onAnalyze={handleAnalyze}
         />
         <div className="bg-card rounded-2xl p-6 border-2 border-border">
           <h3 className="text-lg mb-4">Comidas de hoy</h3>
@@ -111,6 +129,7 @@ export function MealsRoute() {
           )}
         </div>
       </div>
+      <FloatingCoachButton onClick={() => navigate('/chat')} />
     </div>
   );
 }

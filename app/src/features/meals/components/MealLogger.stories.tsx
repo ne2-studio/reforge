@@ -24,6 +24,8 @@ const meta = {
     onSave: fn(),
     libraryItems: [],
     onSaveToLibrary: fn(),
+    isAnalyzing: false,
+    onAnalyze: fn(),
   },
 } satisfies Meta<typeof MealLogger>;
 
@@ -41,5 +43,14 @@ export const Saving: Story = {
 export const WithLibraryItems: Story = {
   args: {
     libraryItems,
+  },
+};
+
+export const Analyzing: Story = {
+  args: {
+    isAnalyzing: true,
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('tab', { name: 'Analizar con IA' }));
   },
 };

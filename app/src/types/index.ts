@@ -366,6 +366,40 @@ export class CustomReminder {
 // CustomReminderDtoShape minus the server-owned `id`/`updatedAt`.
 export type SaveCustomReminderData = Omit<CustomReminderDtoShape, 'id' | 'updatedAt'>;
 
+// Fields the user can submit via POST /api/analyze-meal — mirrors AnalyzeMealRequestDto: no
+// macro inputs, unlike SaveMealData, since the AI backend derives them (see
+// api/Reforge.Core/Meals/IMealsUseCase.cs's AnalyzeAndSaveMealAsync).
+export interface AnalyzeMealData {
+  mealText: string;
+  category: string;
+  time: string;
+}
+
+// Wire shape of api/Reforge.Core/Chat/IChatUseCase.cs's ChatMessageDto — field names already
+// match this class's own property names, verified against api/openapi/v1.swagger.json's
+// ChatMessageDto schema. One instance covers a whole turn (user message + assistant reply),
+// matching the backend's own persistence model — there's no separate "role" per message.
+export interface ChatMessageDtoShape {
+  id: string;
+  userMessage: string;
+  assistantMessage: string;
+  timestamp: string;
+}
+
+export class ChatMessage {
+  readonly id: string;
+  readonly userMessage: string;
+  readonly assistantMessage: string;
+  readonly timestamp: Date;
+
+  constructor(data: ChatMessageDtoShape) {
+    this.id = data.id;
+    this.userMessage = data.userMessage;
+    this.assistantMessage = data.assistantMessage;
+    this.timestamp = new Date(data.timestamp);
+  }
+}
+
 // Wire shape of api/Reforge.Core/ClosedDays/IClosedDaysUseCase.cs's ClosedDayDto — field names
 // already match this class's own property names. `date` is a DateOnly (`yyyy-MM-dd`), `closedAt`
 // a full ISO 8601 timestamp — see that file's own doc-comment on why: date-close is a whole-day

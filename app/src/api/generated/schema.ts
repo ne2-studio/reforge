@@ -68,6 +68,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SendChatMessageRequestDto"];
+                    "text/json": components["schemas"]["SendChatMessageRequestDto"];
+                    "application/*+json": components["schemas"]["SendChatMessageRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SendChatMessageResponseDto"];
+                        "application/json": components["schemas"]["SendChatMessageResponseDto"];
+                        "text/json": components["schemas"]["SendChatMessageResponseDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chat-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ChatMessageDto"][];
+                        "application/json": components["schemas"]["ChatMessageDto"][];
+                        "text/json": components["schemas"]["ChatMessageDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/close-day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ClosedDayDto"];
+                        "application/json": components["schemas"]["ClosedDayDto"];
+                        "text/json": components["schemas"]["ClosedDayDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/day-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ClosedDayDto"][];
+                        "application/json": components["schemas"]["ClosedDayDto"][];
+                        "text/json": components["schemas"]["ClosedDayDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weekly-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WeeklyProgressDto"];
+                        "application/json": components["schemas"]["WeeklyProgressDto"];
+                        "text/json": components["schemas"]["WeeklyProgressDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -246,6 +437,49 @@ export interface paths {
                     "application/json": components["schemas"]["SaveMealRequestDto"];
                     "text/json": components["schemas"]["SaveMealRequestDto"];
                     "application/*+json": components["schemas"]["SaveMealRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MealDto"];
+                        "application/json": components["schemas"]["MealDto"];
+                        "text/json": components["schemas"]["MealDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analyze-meal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AnalyzeMealRequestDto"];
+                    "text/json": components["schemas"]["AnalyzeMealRequestDto"];
+                    "application/*+json": components["schemas"]["AnalyzeMealRequestDto"];
                 };
             };
             responses: {
@@ -743,6 +977,31 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        AnalyzeMealRequestDto: {
+            mealText?: string | null;
+            category?: string | null;
+            time?: string | null;
+        };
+        ChatMessageDto: {
+            /** Format: uuid */
+            id?: string;
+            userMessage?: string | null;
+            assistantMessage?: string | null;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        ClosedDayDto: {
+            /** Format: date */
+            date?: string;
+            /** Format: date-time */
+            closedAt?: string;
+            /** Format: int32 */
+            totalCalories?: number;
+            /** Format: int32 */
+            mealsCount?: number;
+            isTrainingDay?: boolean;
+            analysis?: string | null;
+        };
         CustomReminderDto: {
             /** Format: uuid */
             id?: string;
@@ -932,10 +1191,43 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        SendChatMessageRequestDto: {
+            message?: string | null;
+        };
+        SendChatMessageResponseDto: {
+            reply?: string | null;
+        };
         UpdateReminderSettingsRequestDto: {
             enabled?: boolean;
             channel?: string | null;
             defaultTime?: string | null;
+        };
+        WeeklyDayDto: {
+            /** Format: date */
+            date?: string;
+            /** Format: int32 */
+            targetCalories?: number;
+            /** Format: int32 */
+            consumedCalories?: number;
+            /** Format: int32 */
+            deficit?: number;
+            /** Format: int32 */
+            mealsCount?: number;
+            isClosed?: boolean;
+        };
+        WeeklyProgressDto: {
+            days?: components["schemas"]["WeeklyDayDto"][] | null;
+            /** Format: int32 */
+            totalDeficit?: number;
+            /** Format: int32 */
+            daysInDeficit?: number;
+            /** Format: int32 */
+            daysInSurplus?: number;
+            /** Format: int32 */
+            daysWithMeals?: number;
+            /** Format: int32 */
+            adherenceStreak?: number;
+            insights?: string[] | null;
         };
         WorkoutDto: {
             /** Format: uuid */

@@ -87,6 +87,53 @@ describe('MealLogger', () => {
     expect(screen.getByLabelText('Grasas (g)')).toHaveValue(15);
   });
 
+  it('does not show the "Analizar y guardar" button behavior when onAnalyze is not provided', async () => {
+    const user = userEvent.setup();
+    render(<MealLogger isSaving={false} onSave={vi.fn()} />);
+
+    await user.click(screen.getByRole('tab', { name: 'Analizar con IA' }));
+    await user.type(screen.getByLabelText('Descripción'), 'Pollo con arroz');
+
+    // No onAnalyze wired — clicking must not throw, and there's nothing to assert was called.
+    await user.click(screen.getByRole('button', { name: /Analizar y guardar/ }));
+  });
+
+  it('submits the free-text AI-analysis form (no macro inputs) and resets it', async () => {
+    const user = userEvent.setup();
+    const onAnalyze = vi.fn();
+    render(<MealLogger isSaving={false} onSave={vi.fn()} onAnalyze={onAnalyze} />);
+
+    await user.click(screen.getByRole('tab', { name: 'Analizar con IA' }));
+
+    expect(screen.queryByLabelText('Calorías (kcal)')).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Descripción'), '2 huevos revueltos con aguacate');
+    await user.click(screen.getByRole('button', { name: /Analizar y guardar/ }));
+
+    expect(onAnalyze).toHaveBeenCalledWith(
+      expect.objectContaining({ mealText: '2 huevos revueltos con aguacate' })
+    );
+    expect(screen.getByLabelText('Descripción')).toHaveValue('');
+  });
+
+  it('disables the "Analizar y guardar" button until a meal description is entered', async () => {
+    const user = userEvent.setup();
+    render(<MealLogger isSaving={false} onSave={vi.fn()} onAnalyze={vi.fn()} />);
+
+    await user.click(screen.getByRole('tab', { name: 'Analizar con IA' }));
+
+    expect(screen.getByRole('button', { name: /Analizar y guardar/ })).toBeDisabled();
+  });
+
+  it('shows the analyzing state and disables the button while analyzing', async () => {
+    const user = userEvent.setup();
+    render(<MealLogger isSaving={false} onSave={vi.fn()} onAnalyze={vi.fn()} isAnalyzing />);
+
+    await user.click(screen.getByRole('tab', { name: 'Analizar con IA' }));
+
+    expect(screen.getByRole('button', { name: /Analizando/ })).toBeDisabled();
+  });
+
   it('opens the "guardar en biblioteca" dialog pre-filled from the current form and submits it', async () => {
     const user = userEvent.setup();
     const onSaveToLibrary = vi.fn();

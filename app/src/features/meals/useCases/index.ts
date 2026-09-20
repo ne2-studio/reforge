@@ -1,6 +1,6 @@
 import { api } from '@/api';
 import { useMealsStore } from '@/store/mealsStore';
-import type { SaveMealData } from '@/types';
+import type { SaveMealData, AnalyzeMealData } from '@/types';
 
 // Orchestration layer for the meals feature — see docs/architecture/frontend.md's
 // `useCases/` layer. Each function calls api.meals.*, then writes the result into
@@ -57,6 +57,24 @@ export async function logMeal(data: SaveMealData): Promise<void> {
   } catch (error) {
     useMealsStore.setState({
       error: error instanceof Error ? error.message : 'No se pudo guardar la comida',
+      isLoading: false,
+    });
+    throw error;
+  }
+}
+
+// Slice 8: analyzes a free-text meal via the AI backend and saves it in one call — same
+// store-update shape as logMeal (prepend + refresh today's daily-stats), since an analyzed
+// meal is a meal like any other once saved.
+export async function analyzeAndLogMeal(data: AnalyzeMealData): Promise<void> {
+  useMealsStore.setState({ isLoading: true, error: null });
+  try {
+    const meal = await api.meals.analyzeMeal(data);
+    useMealsStore.setState((state) => ({ meals: [meal, ...state.meals], isLoading: false }));
+    await loadDailyStats(todayDateString());
+  } catch (error) {
+    useMealsStore.setState({
+      error: error instanceof Error ? error.message : 'No se pudo analizar la comida',
       isLoading: false,
     });
     throw error;

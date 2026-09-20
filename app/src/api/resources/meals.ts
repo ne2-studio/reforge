@@ -1,5 +1,12 @@
 import { get, post, isApiErrorWithStatus } from '../http';
-import { Meal, DailyStats, type MealDtoShape, type SaveMealData, type DailyStatsDtoShape } from '../../types';
+import {
+  Meal,
+  DailyStats,
+  type MealDtoShape,
+  type SaveMealData,
+  type AnalyzeMealData,
+  type DailyStatsDtoShape,
+} from '../../types';
 
 export const mealsApi = {
   // GET /api/meals — the caller's own meals, most recent first.
@@ -11,6 +18,14 @@ export const mealsApi = {
   // POST /api/meals — saves a manually-entered meal. Returns the saved meal.
   async saveMeal(data: SaveMealData): Promise<Meal> {
     const saved = await post<MealDtoShape>('/api/meals', data);
+    return new Meal(saved);
+  },
+
+  // POST /api/analyze-meal — Slice 8: analyzes a free-text meal via the AI backend and saves
+  // it in the same call (no macro inputs, unlike saveMeal). Returns the saved meal, same
+  // MealDto shape as saveMeal's response.
+  async analyzeMeal(data: AnalyzeMealData): Promise<Meal> {
+    const saved = await post<MealDtoShape>('/api/analyze-meal', data);
     return new Meal(saved);
   },
 
