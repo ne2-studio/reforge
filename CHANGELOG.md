@@ -40,6 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Nueva cabecera con el logo de Reforge y un menú de usuario (acceso a Perfil, Historial de
   comidas, Mi suscripción y Cerrar sesión) visible en toda la app.
 - Nuevo tema visual con tonos naranja/ámbar en lugar de lima/cian.
+- El resumen de calorías y macros de hoy ahora se ve en la pantalla de Inicio (antes solo
+  estaba en Comidas), junto con las tarjetas de objetivo, racha, comidas de hoy y actividad de
+  hoy (antes "Registro de actividad").
 
 ### Fixed
 

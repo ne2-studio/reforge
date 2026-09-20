@@ -5,9 +5,8 @@ import { isApiErrorWithStatus } from '@/api';
 import { useMealsStore } from '@/store/mealsStore';
 import { useMealLibraryStore } from '@/store/mealLibraryStore';
 import { useFeaturesStore } from '@/store/featuresStore';
-import { loadMeals, loadDailyStats, logMeal, analyzeAndLogMeal, todayDateString } from '../useCases';
+import { loadMeals, logMeal, analyzeAndLogMeal, todayDateString } from '../useCases';
 import { loadLibrary, saveToLibrary } from '@/features/mealLibrary/useCases';
-import { DailyStats } from '../components/DailyStats';
 import { MealLogger } from '../components/MealLogger';
 import { FloatingCoachButton } from '@/features/coach/components/FloatingCoachButton';
 import { AILimitReached } from '@/features/subscription/components/AILimitReached';
@@ -21,14 +20,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   dinner: 'Cena',
 };
 
-// Container for /comidas. Loads the caller's meals plus today's daily-stats through the
-// meals store on mount (shared between DailyStats and this route's own today's-meals list —
-// see docs/architecture/frontend.md's Route-may-call-api-directly exception, which does NOT
-// apply here). Only shows today's meals — full meal history, day-close, day history, and
-// weekly progress live at /historial (features/dayClose, Slice 7).
+// Container for /comidas. Loads the caller's meals through the meals store on mount. The
+// "Resumen de hoy" daily-stats card used to live here too — it now renders on /home
+// (features/home), which loads dailyStats itself; logMeal/analyzeAndLogMeal below still
+// refresh the shared mealsStore.dailyStats after a save so that card stays current. Only shows
+// today's meals — full meal history, day-close, day history, and weekly progress live at
+// /historial (features/dayClose, Slice 7).
 export function MealsRoute() {
   const navigate = useNavigate();
-  const { meals, dailyStats, isLoading, error } = useMealsStore();
+  const { meals, error } = useMealsStore();
   const { items: libraryItems } = useMealLibraryStore();
   const { subscriptions: subscriptionsEnabled } = useFeaturesStore();
   const [isSaving, setIsSaving] = useState(false);
@@ -37,7 +37,6 @@ export function MealsRoute() {
 
   useEffect(() => {
     void loadMeals();
-    void loadDailyStats(todayDateString());
     // Loaded here (not just on /biblioteca-comidas) so MealLogger's "cargar de biblioteca"
     // picker has data without a second, feature-crossing fetch — mealLibraryStore is the
     // single shared source for both routes (docs/architecture/frontend.md's store layer).
@@ -94,10 +93,7 @@ export function MealsRoute() {
         </p>
         <button
           className="underline"
-          onClick={() => {
-            void loadMeals();
-            void loadDailyStats(today);
-          }}
+          onClick={() => void loadMeals()}
         >
           Reintentar
         </button>
@@ -109,7 +105,6 @@ export function MealsRoute() {
     <div className="min-h-screen bg-background px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold text-foreground">Comidas</h1>
-        <DailyStats dailyStats={dailyStats} isLoading={isLoading} />
         <MealLogger
           isSaving={isSaving}
           onSave={handleSave}

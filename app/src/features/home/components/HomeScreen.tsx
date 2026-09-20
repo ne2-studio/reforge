@@ -2,7 +2,8 @@ import { Flame, Plus, Target, Utensils } from 'lucide-react';
 import { Button } from '@/design-system/components/ui/button';
 import { Card, CardContent } from '@/design-system/components/ui/card';
 import { estimateCalories } from '@/features/activities/calorieEstimate';
-import type { Activity, Meal, UserProfile } from '@/types';
+import { DailyStats } from '@/features/meals/components/DailyStats';
+import type { Activity, DailyStats as DailyStatsData, Meal, UserProfile } from '@/types';
 
 const GOAL_LABELS: Record<string, string> = {
   'lose-fat': 'Perder grasa',
@@ -40,15 +41,17 @@ interface HomeScreenProps {
   isLoadingActivities: boolean;
   streak: number | null;
   isLoadingStreak: boolean;
+  dailyStats: DailyStatsData | null;
+  isLoadingDailyStats: boolean;
   onNavigateToMeals: () => void;
   onNavigateToActivity: () => void;
 }
 
 // Presentational — no react-router-dom/store/useCases imports, following this repo's
 // container-vs-presentational split. Ported from the prototype's home tab (App.tsx): a goal
-// banner plus "Comidas de hoy", "Registro de actividad" and "Racha" module cards, trimmed to a
-// summary (full logging UI already lives at /comidas and /actividad, no need to duplicate it
-// here).
+// card, "Resumen de hoy" (moved here from /comidas — see MealsRoute), "Comidas de hoy",
+// "Actividad de hoy" and "Racha" module cards, trimmed to a summary (full logging UI already
+// lives at /comidas and /actividad, no need to duplicate it here).
 export function HomeScreen({
   profile,
   todaysMeals,
@@ -57,6 +60,8 @@ export function HomeScreen({
   isLoadingActivities,
   streak,
   isLoadingStreak,
+  dailyStats,
+  isLoadingDailyStats,
   onNavigateToMeals,
   onNavigateToActivity,
 }: HomeScreenProps) {
@@ -65,19 +70,34 @@ export function HomeScreen({
   return (
     <div className="min-h-screen bg-background px-4 py-8">
       <div className="max-w-5xl mx-auto space-y-6">
-        {profile?.goal && (
-          <div className="bg-gradient-to-br from-primary/20 via-primary/15 to-accent/20 rounded-2xl p-4 border-2 border-primary/40 shadow-lg shadow-primary/20 flex items-center gap-3">
-            <div className="text-4xl">{GOAL_EMOJIS[profile.goal] ?? '🎯'}</div>
-            <div>
-              <h2 className="text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-tight">
-                {GOAL_LABELS[profile.goal] ?? profile.goal}
-              </h2>
-              <p className="text-xs text-muted-foreground">Tu objetivo principal</p>
+        <div className="grid gap-6 md:grid-cols-2">
+          {profile?.goal && (
+            <div className="bg-gradient-to-br from-primary/20 via-primary/15 to-accent/20 rounded-2xl p-4 border-2 border-primary/40 shadow-lg shadow-primary/20 flex items-center gap-3">
+              <div className="text-4xl">{GOAL_EMOJIS[profile.goal] ?? '🎯'}</div>
+              <div>
+                <h2 className="text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-tight">
+                  {GOAL_LABELS[profile.goal] ?? profile.goal}
+                </h2>
+                <p className="text-xs text-muted-foreground">Tu objetivo principal</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="border-2 border-primary/20 overflow-hidden">
+            <div className="p-4 bg-primary/10 border-b border-primary/20 flex items-center gap-2">
+              <Flame className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold">Racha</h3>
+            </div>
+            <div className="p-6 text-center">
+              <div className="text-5xl font-bold text-primary mb-2">{isLoadingStreak ? '–' : (streak ?? 0)}</div>
+              <p className="text-muted-foreground">Días seguidos cumpliendo</p>
+            </div>
+          </Card>
+        </div>
+
+        <DailyStats dailyStats={dailyStats} isLoading={isLoadingDailyStats} />
+
+        <div className="grid gap-6 md:grid-cols-2">
           <Card className="border-2 border-border">
             <CardContent className="pt-6 space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
@@ -116,7 +136,7 @@ export function HomeScreen({
             <CardContent className="pt-6 space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Target className="h-4 w-4 text-primary" />
-                Registro de actividad
+                Actividad de hoy
               </h3>
 
               <Button variant="default" className="w-full justify-start gap-2" onClick={onNavigateToActivity}>
@@ -139,17 +159,6 @@ export function HomeScreen({
                 <p className="text-sm text-muted-foreground">Aún no has registrado ninguna actividad.</p>
               )}
             </CardContent>
-          </Card>
-
-          <Card className="border-2 border-primary/20 overflow-hidden">
-            <div className="p-4 bg-primary/10 border-b border-primary/20 flex items-center gap-2">
-              <Flame className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold">Racha</h3>
-            </div>
-            <div className="p-6 text-center">
-              <div className="text-5xl font-bold text-primary mb-2">{isLoadingStreak ? '–' : (streak ?? 0)}</div>
-              <p className="text-muted-foreground">Días seguidos cumpliendo</p>
-            </div>
           </Card>
         </div>
       </div>
