@@ -124,23 +124,25 @@ export function ProfileRoute() {
 
   if (profile) {
     return (
-      <div className="space-y-6">
-        <ProfileEditor
-          profile={profile}
-          isSaving={isSaving}
-          onSave={handleSave}
-          reminderSettings={settings}
-          customReminders={customReminders}
-          isLoadingReminders={isLoadingReminders}
-          isSavingReminderSettings={isSavingSettings}
-          onSaveReminderSettings={handleSaveReminderSettings}
-          onCreateReminder={handleCreateReminder}
-          onUpdateReminder={handleUpdateReminder}
-          onDeleteReminder={handleDeleteReminder}
-        />
-        {subscriptionsEnabled && subscription?.tier === 'Free' && (
-          <UsageLimits mealAnalysis={subscription.mealAnalysisUsage} chatMessages={subscription.chatMessagesUsage} />
-        )}
+      <div className="min-h-screen bg-background px-4 py-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <ProfileEditor
+            profile={profile}
+            isSaving={isSaving}
+            onSave={handleSave}
+            reminderSettings={settings}
+            customReminders={customReminders}
+            isLoadingReminders={isLoadingReminders}
+            isSavingReminderSettings={isSavingSettings}
+            onSaveReminderSettings={handleSaveReminderSettings}
+            onCreateReminder={handleCreateReminder}
+            onUpdateReminder={handleUpdateReminder}
+            onDeleteReminder={handleDeleteReminder}
+          />
+          {subscriptionsEnabled && subscription?.tier === 'Free' && (
+            <UsageLimits mealAnalysis={subscription.mealAnalysisUsage} chatMessages={subscription.chatMessagesUsage} />
+          )}
+        </div>
       </div>
     );
   }
