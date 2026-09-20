@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useMealsStore } from '@/store/mealsStore';
+import { useMealLibraryStore } from '@/store/mealLibraryStore';
 import { loadMeals, loadDailyStats, logMeal, todayDateString } from '../useCases';
+import { loadLibrary, saveToLibrary } from '@/features/mealLibrary/useCases';
 import { DailyStats } from '../components/DailyStats';
 import { MealLogger } from '../components/MealLogger';
-import type { SaveMealData } from '@/types';
+import type { SaveMealData, SaveMealLibraryItemData } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   breakfast: 'Desayuno',
@@ -21,11 +23,16 @@ const CATEGORY_LABELS: Record<string, string> = {
 // to Slice 7 (docs/plan/02-vertical-slices.md).
 export function MealsRoute() {
   const { meals, dailyStats, isLoading, error } = useMealsStore();
+  const { items: libraryItems } = useMealLibraryStore();
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     void loadMeals();
     void loadDailyStats(todayDateString());
+    // Loaded here (not just on /biblioteca-comidas) so MealLogger's "cargar de biblioteca"
+    // picker has data without a second, feature-crossing fetch — mealLibraryStore is the
+    // single shared source for both routes (docs/architecture/frontend.md's store layer).
+    void loadLibrary();
   }, []);
 
   const handleSave = async (data: SaveMealData) => {
@@ -38,6 +45,12 @@ export function MealsRoute() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSaveToLibrary = (data: SaveMealLibraryItemData) => {
+    saveToLibrary(data)
+      .then(() => toast.success('¡Guardado en tu biblioteca! ✅'))
+      .catch((err: unknown) => toast.error(err instanceof Error ? err.message : 'Error al guardar en la biblioteca'));
   };
 
   const today = todayDateString();
@@ -67,7 +80,12 @@ export function MealsRoute() {
       <div className="max-w-2xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold text-foreground">Comidas</h1>
         <DailyStats dailyStats={dailyStats} isLoading={isLoading} />
-        <MealLogger isSaving={isSaving} onSave={handleSave} />
+        <MealLogger
+          isSaving={isSaving}
+          onSave={handleSave}
+          libraryItems={libraryItems}
+          onSaveToLibrary={handleSaveToLibrary}
+        />
         <div className="bg-card rounded-2xl p-6 border-2 border-border">
           <h3 className="text-lg mb-4">Comidas de hoy</h3>
           {todaysMeals.length === 0 ? (

@@ -52,8 +52,12 @@ export async function handleResponse<T>(response: Response): Promise<T> {
     throw error;
   }
 
+  // A 204 has no body by definition; a 200 can still have an empty one (e.g. DELETE
+  // /api/meal-library/{id} responds `Ok()` with no payload) — response.json() throws on an
+  // empty string, so read as text first and only parse when there's something to parse.
   if (response.status === 204) return undefined as T;
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : (undefined as T);
 }
 
 export async function get<T>(path: string): Promise<T> {
@@ -67,5 +71,10 @@ export async function post<T>(path: string, body: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   });
+  return handleResponse<T>(response);
+}
+
+export async function del<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, { method: 'DELETE', headers: authHeaders() });
   return handleResponse<T>(response);
 }

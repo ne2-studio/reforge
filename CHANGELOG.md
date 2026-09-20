@@ -15,3 +15,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   adapted from `el-baul`.
 - Manual meal logging: log a meal's macros by hand and see the day's calorie/protein/carb/fat
   totals update against your targets.
+- Meal library: save a logged meal as a reusable template, browse/delete your saved meals
+  grouped by category, and load one back into the meal logger to pre-fill its fields.

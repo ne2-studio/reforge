@@ -44,6 +44,7 @@ export function PingRoute() {
       onSignOut={handleSignOut}
       onGoToProfile={() => navigate('/perfil')}
       onGoToMeals={() => navigate('/comidas')}
+      onGoToMealLibrary={() => navigate('/biblioteca-comidas')}
     />
   );
 }

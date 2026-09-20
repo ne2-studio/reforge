@@ -8,6 +8,7 @@ import { CallbackRoute } from '@/features/auth/routes/CallbackRoute';
 import { PingRoute } from '@/features/ping/routes/PingRoute';
 import { ProfileRoute } from '@/features/profile/routes/ProfileRoute';
 import { MealsRoute } from '@/features/meals/routes/MealsRoute';
+import { MealLibraryRoute } from '@/features/mealLibrary/routes/MealLibraryRoute';
 
 // Owns routing, the auth redirect gate, and pushing the OIDC access token into api.ts on
 // every auth-state change — see docs/architecture/frontend.md.
@@ -54,6 +55,14 @@ function App() {
         element={
           <ProtectedRoute>
             <MealsRoute />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/biblioteca-comidas"
+        element={
+          <ProtectedRoute>
+            <MealLibraryRoute />
           </ProtectedRoute>
         }
       />

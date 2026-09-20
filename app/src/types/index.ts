@@ -124,6 +124,49 @@ export class Meal {
 // minus the server-owned `id`/`timestamp`/`date`.
 export type SaveMealData = Omit<MealDtoShape, 'id' | 'timestamp' | 'date'>;
 
+// Wire shape of api/Reforge.Core/MealLibrary/IMealLibraryUseCase.cs's MealLibraryItemDto —
+// field names already match this class's own property names. Category values are the same
+// lowercase strings as Meal.category (see MealsRoute's CATEGORY_LABELS), not the source
+// reforge-frontend's capitalized Spanish strings, for consistency within this codebase.
+export interface MealLibraryItemDtoShape {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export class MealLibraryItem {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly category: string;
+  readonly calories: number;
+  readonly protein: number;
+  readonly carbs: number;
+  readonly fats: number;
+
+  constructor(data: MealLibraryItemDtoShape) {
+    this.id = data.id;
+    this.title = data.title;
+    this.description = data.description;
+    this.category = data.category;
+    this.calories = data.calories;
+    this.protein = data.protein;
+    this.carbs = data.carbs;
+    this.fats = data.fats;
+  }
+}
+
+// Fields the user can submit via POST /api/meal-library — mirrors
+// SaveMealLibraryItemRequestDto, i.e. MealLibraryItemDtoShape minus the server-owned `id`;
+// saving to the library is always a create, there's no edit use case in scope (see
+// IMealLibraryUseCase.cs).
+export type SaveMealLibraryItemData = Omit<MealLibraryItemDtoShape, 'id'>;
+
 // Wire shape of MacroValuesDto — shared by DailyStatsDtoShape's `consumed`/`targets`.
 export interface MacroValuesShape {
   calories: number;

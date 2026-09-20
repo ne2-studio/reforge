@@ -5,8 +5,16 @@ import { Label } from '@/design-system/components/ui/label';
 import { Input } from '@/design-system/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/design-system/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/design-system/components/ui/card';
-import { Utensils, Clock, Check, Loader2 } from 'lucide-react';
-import type { SaveMealData } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/design-system/components/ui/dialog';
+import { Utensils, Clock, Check, Loader2, BookMarked, BookOpen } from 'lucide-react';
+import type { MealLibraryItem, SaveMealData, SaveMealLibraryItemData } from '@/types';
 
 const CATEGORIES = [
   { value: 'breakfast', label: '🌅 Desayuno' },
@@ -56,15 +64,29 @@ function emptyFields(): ManualFields {
 interface MealLoggerProps {
   isSaving: boolean;
   onSave: (data: SaveMealData) => void;
+  // Slice 3 (meal library) wiring — both optional so this component still works standalone
+  // (e.g. in isolation in a story/test) without a library in scope yet.
+  libraryItems?: MealLibraryItem[];
+  onSaveToLibrary?: (data: SaveMealLibraryItemData) => void;
+}
+
+function emptyLibraryFields(): { title: string; description: string; calories: string; protein: string; carbs: string; fats: string } {
+  return { title: '', description: '', calories: '', protein: '', carbs: '', fats: '' };
 }
 
 // Presentational — no react-router-dom/store/useCases imports. Manual-entry-only meal form,
 // ported from reforge-frontend/src/components/MealLogger.tsx's `"manual"` mode: the `"new"`
-// (AI text analysis) and `"library"` (meal library) tabs are dropped entirely, since neither
-// exists yet (Slice 8/9, Slice 3), and so are the AI-usage-limit props that only made sense
-// alongside the `"new"` tab.
-export function MealLogger({ isSaving, onSave }: MealLoggerProps) {
+// (AI text analysis) tab is dropped entirely, since it doesn't exist yet (Slice 8/9), and so
+// are the AI-usage-limit props that only made sense alongside it. The source's `"library"` tab
+// is folded into this manual form instead of being a separate mode: a "cargar de biblioteca"
+// picker pre-fills these same fields, and a "guardar en biblioteca" dialog reads them back out
+// — both stay presentational (no store/useCases import here), calling `onSaveToLibrary` for
+// the actual mutation, which MealsRoute wires to the mealLibrary useCase/toast, matching the
+// existing onSave/handleSave split between this component and its Route.
+export function MealLogger({ isSaving, onSave, libraryItems = [], onSaveToLibrary }: MealLoggerProps) {
   const [fields, setFields] = useState<ManualFields>(emptyFields);
+  const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false);
+  const [libraryFields, setLibraryFields] = useState(emptyLibraryFields);
 
   const updateField = (field: keyof ManualFields, value: string) => {
     setFields({ ...fields, [field]: value });
@@ -94,6 +116,55 @@ export function MealLogger({ isSaving, onSave }: MealLoggerProps) {
     setFields(emptyFields());
   };
 
+  // Pre-fills the manual form from a saved library item — mirrors reforge-frontend's
+  // `selectLibraryMeal`. Doesn't touch `time`, since a library item has no time of its own.
+  const handleLoadFromLibrary = (id: string) => {
+    const item = libraryItems.find((libraryItem) => libraryItem.id === id);
+    if (!item) return;
+    setFields({
+      ...fields,
+      mealText: item.description,
+      category: item.category,
+      calories: String(item.calories),
+      protein: String(item.protein),
+      carbs: String(item.carbs),
+      fats: String(item.fats),
+    });
+  };
+
+  const openLibraryDialog = () => {
+    setLibraryFields({
+      title: '',
+      description: fields.mealText,
+      calories: fields.calories,
+      protein: fields.protein,
+      carbs: fields.carbs,
+      fats: fields.fats,
+    });
+    setIsLibraryDialogOpen(true);
+  };
+
+  const isLibraryFormValid =
+    libraryFields.title.trim() !== '' &&
+    libraryFields.calories !== '' &&
+    libraryFields.protein !== '' &&
+    libraryFields.carbs !== '' &&
+    libraryFields.fats !== '';
+
+  const handleSaveToLibrary = () => {
+    if (!isLibraryFormValid || !onSaveToLibrary) return;
+    onSaveToLibrary({
+      title: libraryFields.title,
+      description: libraryFields.description,
+      category: fields.category,
+      calories: parseFloat(libraryFields.calories),
+      protein: parseFloat(libraryFields.protein),
+      carbs: parseFloat(libraryFields.carbs),
+      fats: parseFloat(libraryFields.fats),
+    });
+    setIsLibraryDialogOpen(false);
+  };
+
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
@@ -104,6 +175,24 @@ export function MealLogger({ isSaving, onSave }: MealLoggerProps) {
         <CardDescription>Introduce los valores nutricionales manualmente</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {libraryItems.length > 0 && (
+          <div className="space-y-2">
+            <Label htmlFor="loadFromLibrary">Cargar de biblioteca</Label>
+            <Select onValueChange={handleLoadFromLibrary}>
+              <SelectTrigger id="loadFromLibrary" className="h-12">
+                <SelectValue placeholder="Selecciona una comida guardada" />
+              </SelectTrigger>
+              <SelectContent>
+                {libraryItems.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="category">Tipo</Label>
@@ -198,20 +287,104 @@ export function MealLogger({ isSaving, onSave }: MealLoggerProps) {
           </div>
         </div>
 
-        <Button onClick={handleSave} className="w-full h-12" disabled={isSaving || !isValid}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Guardando...
-            </>
-          ) : (
-            <>
-              <Check className="mr-2 h-5 w-5" />
-              Guardar comida
-            </>
+        <div className="flex gap-2">
+          <Button onClick={handleSave} className="flex-1 h-12" disabled={isSaving || !isValid}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              <>
+                <Check className="mr-2 h-5 w-5" />
+                Guardar comida
+              </>
+            )}
+          </Button>
+          {onSaveToLibrary && (
+            <Button type="button" variant="outline" className="h-12" onClick={openLibraryDialog}>
+              <BookMarked className="mr-2 h-5 w-5" />
+              Guardar en biblioteca
+            </Button>
           )}
-        </Button>
+        </div>
       </CardContent>
+
+      <Dialog open={isLibraryDialogOpen} onOpenChange={setIsLibraryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Guardar en biblioteca
+            </DialogTitle>
+            <DialogDescription>Guarda esta comida como plantilla reutilizable.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="libraryTitle">Título</Label>
+              <Input
+                id="libraryTitle"
+                placeholder="Ej: Pollo con arroz"
+                value={libraryFields.title}
+                onChange={(e) => setLibraryFields({ ...libraryFields, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="libraryDescription">Descripción</Label>
+              <Textarea
+                id="libraryDescription"
+                value={libraryFields.description}
+                onChange={(e) => setLibraryFields({ ...libraryFields, description: e.target.value })}
+                rows={2}
+                className="resize-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="libraryCalories">Calorías (kcal)</Label>
+                <Input
+                  id="libraryCalories"
+                  type="number"
+                  value={libraryFields.calories}
+                  onChange={(e) => setLibraryFields({ ...libraryFields, calories: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="libraryProtein">Proteína (g)</Label>
+                <Input
+                  id="libraryProtein"
+                  type="number"
+                  value={libraryFields.protein}
+                  onChange={(e) => setLibraryFields({ ...libraryFields, protein: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="libraryCarbs">Carbohidratos (g)</Label>
+                <Input
+                  id="libraryCarbs"
+                  type="number"
+                  value={libraryFields.carbs}
+                  onChange={(e) => setLibraryFields({ ...libraryFields, carbs: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="libraryFats">Grasas (g)</Label>
+                <Input
+                  id="libraryFats"
+                  type="number"
+                  value={libraryFields.fats}
+                  onChange={(e) => setLibraryFields({ ...libraryFields, fats: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleSaveToLibrary} disabled={!isLibraryFormValid}>
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -41,6 +41,105 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/meal-library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MealLibraryItemDto"][];
+                        "application/json": components["schemas"]["MealLibraryItemDto"][];
+                        "text/json": components["schemas"]["MealLibraryItemDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SaveMealLibraryItemRequestDto"];
+                    "text/json": components["schemas"]["SaveMealLibraryItemRequestDto"];
+                    "application/*+json": components["schemas"]["SaveMealLibraryItemRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MealLibraryItemDto"];
+                        "application/json": components["schemas"]["MealLibraryItemDto"];
+                        "text/json": components["schemas"]["MealLibraryItemDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meal-library/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/meals": {
         parameters: {
             query?: never;
@@ -289,6 +388,21 @@ export interface components {
             /** Format: date */
             date?: string;
         };
+        MealLibraryItemDto: {
+            /** Format: uuid */
+            id?: string;
+            title?: string | null;
+            description?: string | null;
+            category?: string | null;
+            /** Format: int32 */
+            calories?: number;
+            /** Format: int32 */
+            protein?: number;
+            /** Format: int32 */
+            carbs?: number;
+            /** Format: int32 */
+            fats?: number;
+        };
         PingResponseDto: {
             sub?: string | null;
             /** Format: date-time */
@@ -315,6 +429,19 @@ export interface components {
             } | null;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        SaveMealLibraryItemRequestDto: {
+            title?: string | null;
+            description?: string | null;
+            category?: string | null;
+            /** Format: int32 */
+            calories?: number;
+            /** Format: int32 */
+            protein?: number;
+            /** Format: int32 */
+            carbs?: number;
+            /** Format: int32 */
+            fats?: number;
         };
         SaveMealRequestDto: {
             mealText?: string | null;

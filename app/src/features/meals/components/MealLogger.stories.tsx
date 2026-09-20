@@ -1,6 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 import { MealLogger } from './MealLogger';
+import { MealLibraryItem } from '@/types';
+
+const libraryItems = [
+  new MealLibraryItem({
+    id: 'library-1',
+    title: 'Pollo con arroz',
+    description: 'Pechuga de pollo a la plancha con arroz blanco',
+    category: 'lunch',
+    calories: 600,
+    protein: 50,
+    carbs: 60,
+    fats: 15,
+  }),
+];
 
 const meta = {
   title: 'Features/Meals/MealLogger',
@@ -8,6 +22,8 @@ const meta = {
   args: {
     isSaving: false,
     onSave: fn(),
+    libraryItems: [],
+    onSaveToLibrary: fn(),
   },
 } satisfies Meta<typeof MealLogger>;
 
@@ -19,5 +35,11 @@ export const Default: Story = {};
 export const Saving: Story = {
   args: {
     isSaving: true,
+  },
+};
+
+export const WithLibraryItems: Story = {
+  args: {
+    libraryItems,
   },
 };
