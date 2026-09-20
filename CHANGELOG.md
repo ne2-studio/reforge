@@ -37,3 +37,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Tras iniciar sesión llegas a una pantalla de inicio con la barra de navegación (Inicio,
   Comidas, Actividad, Coach, Progreso) para moverte entre las secciones de la app.
+- Nueva cabecera con el logo de Reforge y un menú de usuario (acceso a Perfil, Historial de
+  comidas, Mi suscripción y Cerrar sesión) visible en toda la app.
+- Nuevo tema visual con tonos naranja/ámbar en lugar de lima/cian.

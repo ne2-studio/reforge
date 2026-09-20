@@ -4,9 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Design tokens adapted from the reforge-frontend prototype's styles/globals.css (dark
-   energetic theme, lime/neon-green accent) — kept as CSS custom properties + Tailwind v4's
-   CSS-first `@theme inline` (no tailwind.config.js), unlike the prototype's compiled-output
-   globals.css. */
+   energetic theme, orange/amber "fire" accent) — kept as CSS custom properties + Tailwind
+   v4's CSS-first `@theme inline` (no tailwind.config.js), unlike the prototype's
+   compiled-output globals.css. */
 :root {
   --font-size: 16px;
   --background: #0a0a0a;
@@ -15,34 +15,34 @@
   --card-foreground: #f5f5f5;
   --popover: #1a1a1a;
   --popover-foreground: #f5f5f5;
-  --primary: #c4f51b;
+  --primary: #f97316;
   --primary-foreground: #0a0a0a;
   --secondary: #1a1a1a;
   --secondary-foreground: #f5f5f5;
   --muted: #262626;
   --muted-foreground: #a3a3a3;
-  --accent: #22d3ee;
+  --accent: #fbbf24;
   --accent-foreground: #0a0a0a;
   --destructive: #ef4444;
   --destructive-foreground: #f5f5f5;
   --border: #262626;
   --input: #1a1a1a;
   --switch-background: #404040;
-  --ring: #c4f51b;
-  --chart-1: #c4f51b;
-  --chart-2: #22d3ee;
-  --chart-3: #bef264;
-  --chart-4: #fbbf24;
-  --chart-5: #f472b6;
+  --ring: #f97316;
+  --chart-1: #f97316;
+  --chart-2: #fbbf24;
+  --chart-3: #ef4444;
+  --chart-4: #facc15;
+  --chart-5: #f87171;
   --radius: 1rem;
   --sidebar: #0a0a0a;
   --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #c4f51b;
+  --sidebar-primary: #f97316;
   --sidebar-primary-foreground: #0a0a0a;
   --sidebar-accent: #1a1a1a;
   --sidebar-accent-foreground: #f5f5f5;
   --sidebar-border: #262626;
-  --sidebar-ring: #c4f51b;
+  --sidebar-ring: #f97316;
 }
 
 @theme inline {
