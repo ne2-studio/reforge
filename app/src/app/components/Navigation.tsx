@@ -47,7 +47,9 @@ export const Navigation = () => {
   };
 
   return (
-    <Sidebar>
+    // top: 60 matches Header's h-[60px] — desktop's fixed sidebar panel otherwise spans the
+    // full viewport height (see Sidebar's `fixed inset-y-0`) and would sit under the header.
+    <Sidebar style={{ top: 60 }}>
       <SidebarContent>
         <SidebarMenu className="p-2 gap-1">
           {NAV_ITEMS.map(({ path, label, icon: Icon, isActive }) => (
