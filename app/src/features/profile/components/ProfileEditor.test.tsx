@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ProfileEditor } from './ProfileEditor';
 import { UserProfile } from '@/types';
@@ -21,20 +21,9 @@ const profile = new UserProfile({
   updatedAt: '2026-01-01T00:00:00.000Z',
 });
 
-const reminderProps = {
-  reminderSettings: null,
-  customReminders: [],
-  isLoadingReminders: false,
-  isSavingReminderSettings: false,
-  onSaveReminderSettings: vi.fn(),
-  onCreateReminder: vi.fn(),
-  onUpdateReminder: vi.fn(),
-  onDeleteReminder: vi.fn(),
-};
-
 describe('ProfileEditor', () => {
   it('renders a read-only summary of the saved profile', () => {
-    render(<ProfileEditor profile={profile} isSaving={false} onSave={vi.fn()} {...reminderProps} />);
+    render(<ProfileEditor profile={profile} isSaving={false} onSave={vi.fn()} />);
 
     expect(screen.getByText('30 años')).toBeInTheDocument();
     expect(screen.getByText('Hombre')).toBeInTheDocument();
@@ -47,7 +36,7 @@ describe('ProfileEditor', () => {
     const user = userEvent.setup();
     const onSave = vi.fn();
 
-    render(<ProfileEditor profile={profile} isSaving={false} onSave={onSave} {...reminderProps} />);
+    render(<ProfileEditor profile={profile} isSaving={false} onSave={onSave} />);
 
     await user.click(screen.getByRole('button', { name: 'Editar' }));
 
@@ -55,10 +44,7 @@ describe('ProfileEditor', () => {
     await user.clear(ageInput);
     await user.type(ageInput, '31');
 
-    // Scoped to the profile edit card — the Recordatorios section (ReminderSettingsCard)
-    // renders its own, separate "Guardar" button below it.
-    const editCard = screen.getByRole('heading', { name: 'Editar perfil' }).closest('[data-slot="card"]') as HTMLElement;
-    await user.click(within(editCard).getByRole('button', { name: /Guardar/ }));
+    await user.click(screen.getByRole('button', { name: /Guardar/ }));
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -77,7 +63,7 @@ describe('ProfileEditor', () => {
     const user = userEvent.setup();
     const onSave = vi.fn();
 
-    render(<ProfileEditor profile={profile} isSaving={false} onSave={onSave} {...reminderProps} />);
+    render(<ProfileEditor profile={profile} isSaving={false} onSave={onSave} />);
 
     await user.click(screen.getByRole('button', { name: 'Editar' }));
     await user.clear(screen.getByLabelText('Edad'));
@@ -86,27 +72,5 @@ describe('ProfileEditor', () => {
 
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByText('30 años')).toBeInTheDocument();
-  });
-
-  it('renders the Recordatorios section and forwards a settings save', async () => {
-    const user = userEvent.setup();
-    const onSaveReminderSettings = vi.fn();
-
-    render(
-      <ProfileEditor
-        profile={profile}
-        isSaving={false}
-        onSave={vi.fn()}
-        {...reminderProps}
-        onSaveReminderSettings={onSaveReminderSettings}
-      />
-    );
-
-    expect(screen.getByRole('heading', { name: 'Recordatorios' })).toBeInTheDocument();
-
-    await user.click(screen.getByLabelText('Activar recordatorios'));
-    await user.click(screen.getByRole('button', { name: 'Guardar' }));
-
-    expect(onSaveReminderSettings).toHaveBeenCalledWith({ enabled: true, channel: 'push', defaultTime: '08:00' });
   });
 });

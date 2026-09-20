@@ -6,7 +6,6 @@ using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Measurements.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
-using Reforge.Core.Reminders.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Subscriptions.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
@@ -28,8 +27,6 @@ public static class ServiceRegistration
         services.AddSingleton<IActivityRepository, InMemoryActivityRepository>();
         services.AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository>();
         services.AddSingleton<IMeasurementRepository, InMemoryMeasurementRepository>();
-        services.AddSingleton<IReminderSettingsRepository, InMemoryReminderSettingsRepository>();
-        services.AddSingleton<ICustomReminderRepository, InMemoryCustomReminderRepository>();
         services.AddSingleton<IChatMessageRepository, InMemoryChatMessageRepository>();
         services.AddSingleton<ISubscriptionRepository, InMemorySubscriptionRepository>();
         services.AddSingleton<ICheckoutSessionRepository, InMemoryCheckoutSessionRepository>();

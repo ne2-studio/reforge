@@ -632,198 +632,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/reminder-settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ReminderSettingsDto"];
-                        "application/json": components["schemas"]["ReminderSettingsDto"];
-                        "text/json": components["schemas"]["ReminderSettingsDto"];
-                    };
-                };
-            };
-        };
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateReminderSettingsRequestDto"];
-                    "text/json": components["schemas"]["UpdateReminderSettingsRequestDto"];
-                    "application/*+json": components["schemas"]["UpdateReminderSettingsRequestDto"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ReminderSettingsDto"];
-                        "application/json": components["schemas"]["ReminderSettingsDto"];
-                        "text/json": components["schemas"]["ReminderSettingsDto"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/custom-reminders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["CustomReminderDto"][];
-                        "application/json": components["schemas"]["CustomReminderDto"][];
-                        "text/json": components["schemas"]["CustomReminderDto"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SaveCustomReminderRequestDto"];
-                    "text/json": components["schemas"]["SaveCustomReminderRequestDto"];
-                    "application/*+json": components["schemas"]["SaveCustomReminderRequestDto"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["CustomReminderDto"];
-                        "application/json": components["schemas"]["CustomReminderDto"];
-                        "text/json": components["schemas"]["CustomReminderDto"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/custom-reminders/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SaveCustomReminderRequestDto"];
-                    "text/json": components["schemas"]["SaveCustomReminderRequestDto"];
-                    "application/*+json": components["schemas"]["SaveCustomReminderRequestDto"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["CustomReminderDto"];
-                        "application/json": components["schemas"]["CustomReminderDto"];
-                        "text/json": components["schemas"]["CustomReminderDto"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/weekly-progress": {
         parameters: {
             query?: never;
@@ -953,16 +761,6 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
-        CustomReminderDto: {
-            /** Format: uuid */
-            id?: string;
-            label?: string | null;
-            time?: string | null;
-            daysOfWeek?: string[] | null;
-            enabled?: boolean;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
         DailyStatsDto: {
             consumed?: components["schemas"]["MacroValuesDto"];
             targets?: components["schemas"]["MacroValuesDto"];
@@ -1082,19 +880,6 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
-        ReminderSettingsDto: {
-            enabled?: boolean;
-            channel?: string | null;
-            defaultTime?: string | null;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        SaveCustomReminderRequestDto: {
-            label?: string | null;
-            time?: string | null;
-            daysOfWeek?: string[] | null;
-            enabled?: boolean;
-        };
         SaveMealLibraryItemRequestDto: {
             title?: string | null;
             description?: string | null;
@@ -1150,11 +935,6 @@ export interface components {
         };
         SendChatMessageResponseDto: {
             reply?: string | null;
-        };
-        UpdateReminderSettingsRequestDto: {
-            enabled?: boolean;
-            channel?: string | null;
-            defaultTime?: string | null;
         };
         WeeklyDayDto: {
             /** Format: date */

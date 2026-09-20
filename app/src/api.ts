@@ -7,7 +7,6 @@ import { mealLibraryApi } from './api/resources/mealLibrary';
 import { activitiesApi } from './api/resources/activities';
 import { workoutsApi } from './api/resources/workouts';
 import { measurementsApi } from './api/resources/measurements';
-import { remindersApi } from './api/resources/reminders';
 import { weeklyProgressApi } from './api/resources/weeklyProgress';
 import { coachApi } from './api/resources/coach';
 import { featuresApi } from './api/resources/features';
@@ -23,7 +22,6 @@ export const api = {
   activities: activitiesApi,
   workouts: workoutsApi,
   measurements: measurementsApi,
-  reminders: remindersApi,
   weeklyProgress: weeklyProgressApi,
   coach: coachApi,
   features: featuresApi,

@@ -23,8 +23,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   including a body-fat % and lean-mass estimate computed from your profile once enough data is
   available. The Progreso screen has two tabs: "Medidas y evolución" for this, and "Resumen
   semanal" for your weekly calorie deficit/surplus summary and adherence streak.
-- Recordatorios: activa avisos generales (canal y hora por defecto) y crea tus propios
-  recordatorios personalizados (mensaje, hora y días de la semana) desde la pantalla de perfil.
 - Coach de IA: chatea con tu coach personal desde un botón flotante en Comidas, y registra una
   comida describiéndola en texto libre para que la IA calcule sus macros y la guarde por ti.
 - Suscripción Premium: consulta tu plan y tu uso de funciones de IA desde el perfil, mejora tu

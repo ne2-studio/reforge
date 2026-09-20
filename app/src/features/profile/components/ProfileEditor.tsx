@@ -5,15 +5,7 @@ import { Label } from '@/design-system/components/ui/label';
 import { Textarea } from '@/design-system/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/design-system/components/ui/card';
 import { User, Save, Loader2, Dumbbell } from 'lucide-react';
-import { ReminderSettingsCard } from './ReminderSettingsCard';
-import type {
-  CustomReminder,
-  ReminderSettings,
-  SaveCustomReminderData,
-  SaveProfileData,
-  SaveReminderSettingsData,
-  UserProfile,
-} from '@/types';
+import type { SaveProfileData, UserProfile } from '@/types';
 
 const DAYS_OF_WEEK = [
   { key: 'monday', label: 'L', fullLabel: 'Lunes' },
@@ -74,14 +66,6 @@ interface ProfileEditorProps {
   profile: UserProfile;
   isSaving: boolean;
   onSave: (data: SaveProfileData) => void;
-  reminderSettings: ReminderSettings | null;
-  customReminders: CustomReminder[];
-  isLoadingReminders: boolean;
-  isSavingReminderSettings: boolean;
-  onSaveReminderSettings: (data: SaveReminderSettingsData) => void;
-  onCreateReminder: (data: SaveCustomReminderData) => void;
-  onUpdateReminder: (id: string, data: SaveCustomReminderData) => void;
-  onDeleteReminder: (id: string) => void;
 }
 
 // Presentational — no react-router-dom/store/useCases imports. Read/edit view for an
@@ -89,24 +73,7 @@ interface ProfileEditorProps {
 // waist/neck/goalBodyFat/caloricPreference dropped (see OnboardingWizard's comment) and the
 // History tab dropped entirely: that's Slice 7 (History), not built yet at the time, and the
 // legacy component's Tabs/DayHistory imports were unused dead wiring anyway.
-//
-// Slice 6 (docs/plan/02-vertical-slices.md) adds a Recordatorios section below the profile
-// card via <ReminderSettingsCard/> — there's no standalone reminders route, so it lives here,
-// with reminders' own props forwarded straight through from ProfileRoute (the store/useCases
-// wiring belongs there, not in this presentational component).
-export function ProfileEditor({
-  profile,
-  isSaving,
-  onSave,
-  reminderSettings,
-  customReminders,
-  isLoadingReminders,
-  isSavingReminderSettings,
-  onSaveReminderSettings,
-  onCreateReminder,
-  onUpdateReminder,
-  onDeleteReminder,
-}: ProfileEditorProps) {
+export function ProfileEditor({ profile, isSaving, onSave }: ProfileEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [edited, setEdited] = useState<EditableFields>(() => toEditableFields(profile));
 
@@ -131,19 +98,6 @@ export function ProfileEditor({
     setEdited(toEditableFields(profile));
     setIsEditing(false);
   };
-
-  const reminders = (
-    <ReminderSettingsCard
-      settings={reminderSettings}
-      customReminders={customReminders}
-      isLoading={isLoadingReminders}
-      isSavingSettings={isSavingReminderSettings}
-      onSaveSettings={onSaveReminderSettings}
-      onCreateReminder={onCreateReminder}
-      onUpdateReminder={onUpdateReminder}
-      onDeleteReminder={onDeleteReminder}
-    />
-  );
 
   if (!isEditing) {
     return (
@@ -233,7 +187,6 @@ export function ProfileEditor({
             </div>
           </CardContent>
         </Card>
-        {reminders}
       </div>
     );
   }
@@ -351,7 +304,6 @@ export function ProfileEditor({
           </div>
         </CardContent>
       </Card>
-      {reminders}
     </div>
   );
 }
