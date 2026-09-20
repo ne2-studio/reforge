@@ -19,6 +19,8 @@ using Reforge.Core.Ping;
 using Reforge.Core.Ping.Application;
 using Reforge.Core.Profiles;
 using Reforge.Core.Profiles.Application;
+using Reforge.Core.Reminders;
+using Reforge.Core.Reminders.Application;
 using Reforge.Core.Shared;
 using Reforge.Core.Workouts;
 using Reforge.Core.Workouts.Application;
@@ -137,6 +139,7 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IActivitiesUseCase, ActivitiesManager>();
         builder.Services.AddScoped<IWorkoutsUseCase, WorkoutsManager>();
         builder.Services.AddScoped<IMeasurementsUseCase, MeasurementsManager>();
+        builder.Services.AddScoped<IRemindersUseCase, RemindersManager>();
 
         var app = builder.Build();
 

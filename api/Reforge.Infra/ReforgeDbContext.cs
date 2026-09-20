@@ -4,6 +4,7 @@ using Reforge.Core.MealLibrary.Domain;
 using Reforge.Core.Meals.Domain;
 using Reforge.Core.Measurements.Domain;
 using Reforge.Core.Profiles.Domain;
+using Reforge.Core.Reminders.Domain;
 using Reforge.Core.Users.Domain;
 using Reforge.Core.Workouts.Domain;
 
@@ -18,6 +19,8 @@ public class ReforgeDbContext(DbContextOptions<ReforgeDbContext> options) : DbCo
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<Workout> Workouts => Set<Workout>();
     public DbSet<Measurement> Measurements => Set<Measurement>();
+    public DbSet<ReminderSettings> ReminderSettings => Set<ReminderSettings>();
+    public DbSet<CustomReminder> CustomReminders => Set<CustomReminder>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

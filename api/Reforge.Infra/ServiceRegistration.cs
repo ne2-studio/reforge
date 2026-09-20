@@ -6,6 +6,7 @@ using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Measurements.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
+using Reforge.Core.Reminders.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
 using Reforge.Core.Workouts.OutputPorts;
@@ -27,6 +28,8 @@ public static class ServiceRegistration
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
         services.AddScoped<IMeasurementRepository, MeasurementRepository>();
+        services.AddScoped<IReminderSettingsRepository, ReminderSettingsRepository>();
+        services.AddScoped<ICustomReminderRepository, CustomReminderRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();
