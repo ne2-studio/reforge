@@ -189,6 +189,71 @@ export class MacroValues {
   }
 }
 
+// Wire shape of api/Reforge.Core/Activities/IActivitiesUseCase.cs's ActivityDto — field names
+// already match this class's own property names (System.Text.Json's default camelCase
+// serialization). `duration` is only set for `strength`/`cardio`, `steps` only for `neat` — the
+// backend never sends both. Timestamp is always server-set (see IActivitiesUseCase.cs), never
+// sent by the client.
+export interface ActivityDtoShape {
+  id: string;
+  type: string;
+  duration: number | null;
+  steps: number | null;
+  timestamp: string;
+}
+
+export class Activity {
+  readonly id: string;
+  readonly type: string;
+  readonly duration: number | null;
+  readonly steps: number | null;
+  readonly timestamp: Date;
+
+  constructor(data: ActivityDtoShape) {
+    this.id = data.id;
+    this.type = data.type;
+    this.duration = data.duration;
+    this.steps = data.steps;
+    this.timestamp = new Date(data.timestamp);
+  }
+}
+
+// Fields the user can submit via POST /api/activities — mirrors LogActivityRequestDto, i.e.
+// ActivityDtoShape minus the server-owned `id`/`timestamp`.
+export type LogActivityData = Omit<ActivityDtoShape, 'id' | 'timestamp'>;
+
+// Wire shape of api/Reforge.Core/Workouts/IWorkoutsUseCase.cs's WorkoutDto — field names
+// already match this class's own property names. `volume` (kg) is only set for `strength`,
+// `duration` (minutes) only for `cardio` — the backend never sends both. Timestamp is always
+// server-set, never sent by the client.
+export interface WorkoutDtoShape {
+  id: string;
+  type: string;
+  volume: number | null;
+  duration: number | null;
+  timestamp: string;
+}
+
+export class Workout {
+  readonly id: string;
+  readonly type: string;
+  readonly volume: number | null;
+  readonly duration: number | null;
+  readonly timestamp: Date;
+
+  constructor(data: WorkoutDtoShape) {
+    this.id = data.id;
+    this.type = data.type;
+    this.volume = data.volume;
+    this.duration = data.duration;
+    this.timestamp = new Date(data.timestamp);
+  }
+}
+
+// Fields the user can submit via POST /api/workouts — mirrors LogWorkoutRequestDto, i.e.
+// WorkoutDtoShape minus the server-owned `id`/`timestamp`.
+export type LogWorkoutData = Omit<WorkoutDtoShape, 'id' | 'timestamp'>;
+
 // Wire shape of GET /daily-stats/{date}'s DailyStatsDto.
 export interface DailyStatsDtoShape {
   consumed: MacroValuesShape;

@@ -9,6 +9,8 @@ import { PingRoute } from '@/features/ping/routes/PingRoute';
 import { ProfileRoute } from '@/features/profile/routes/ProfileRoute';
 import { MealsRoute } from '@/features/meals/routes/MealsRoute';
 import { MealLibraryRoute } from '@/features/mealLibrary/routes/MealLibraryRoute';
+import { ActivityRoute } from '@/features/activities/routes/ActivityRoute';
+import { WorkoutRoute } from '@/features/workouts/routes/WorkoutRoute';
 
 // Owns routing, the auth redirect gate, and pushing the OIDC access token into api.ts on
 // every auth-state change — see docs/architecture/frontend.md.
@@ -63,6 +65,22 @@ function App() {
         element={
           <ProtectedRoute>
             <MealLibraryRoute />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/actividad"
+        element={
+          <ProtectedRoute>
+            <ActivityRoute />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/entrenamientos"
+        element={
+          <ProtectedRoute>
+            <WorkoutRoute />
           </ProtectedRoute>
         }
       />

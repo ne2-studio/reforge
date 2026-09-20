@@ -36,6 +36,17 @@ if (typeof window !== 'undefined' && typeof window.HTMLElement !== 'undefined') 
   }
 }
 
+// jsdom doesn't implement ResizeObserver — recharts' <ResponsiveContainer> (used by the
+// workouts feature's charts) reads it on mount; without a stub, rendering it throws in
+// component tests.
+if (typeof window !== 'undefined' && !window.ResizeObserver) {
+  window.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 afterEach(() => {
   cleanup();
 });
