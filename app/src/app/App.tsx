@@ -11,6 +11,7 @@ import { MealsRoute } from '@/features/meals/routes/MealsRoute';
 import { MealLibraryRoute } from '@/features/mealLibrary/routes/MealLibraryRoute';
 import { ActivityRoute } from '@/features/activities/routes/ActivityRoute';
 import { WorkoutRoute } from '@/features/workouts/routes/WorkoutRoute';
+import { ProgressRoute } from '@/features/measurements/routes/ProgressRoute';
 
 // Owns routing, the auth redirect gate, and pushing the OIDC access token into api.ts on
 // every auth-state change — see docs/architecture/frontend.md.
@@ -81,6 +82,14 @@ function App() {
         element={
           <ProtectedRoute>
             <WorkoutRoute />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/progreso"
+        element={
+          <ProtectedRoute>
+            <ProgressRoute />
           </ProtectedRoute>
         }
       />

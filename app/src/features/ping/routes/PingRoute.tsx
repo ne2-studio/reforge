@@ -47,6 +47,7 @@ export function PingRoute() {
       onGoToMealLibrary={() => navigate('/biblioteca-comidas')}
       onGoToActivity={() => navigate('/actividad')}
       onGoToWorkouts={() => navigate('/entrenamientos')}
+      onGoToProgress={() => navigate('/progreso')}
     />
   );
 }

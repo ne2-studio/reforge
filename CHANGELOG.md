@@ -19,3 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   grouped by category, and load one back into the meal logger to pre-fill its fields.
 - Activity and workout tracking: log strength/cardio/NEAT activities and strength/cardio
   workouts, with a history list (activities) or stat cards and charts (workouts).
+- Progress tracking: log weight/waist/neck measurements and see stat cards and trend charts,
+  including a body-fat % and lean-mass estimate computed from your profile once enough data is
+  available.

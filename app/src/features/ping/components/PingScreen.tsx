@@ -13,13 +13,15 @@ interface PingScreenProps {
   onGoToMealLibrary: () => void;
   onGoToActivity: () => void;
   onGoToWorkouts: () => void;
+  onGoToProgress: () => void;
 }
 
 // Presentational — no react-router-dom/store/useCases imports. The one real authenticated
 // screen for the walking skeleton (docs/plan/01-walking-skeleton.md): shows the result of
 // calling the backend's authenticated `GET /ping` with the OIDC access token. Also the app's
 // minimal nav affordance to `/perfil` (Slice 1), `/comidas` (Slice 2), `/biblioteca-comidas`
-// (Slice 3), and `/actividad`/`/entrenamientos` (Slice 4) — there's no real home screen yet.
+// (Slice 3), `/actividad`/`/entrenamientos` (Slice 4), and `/progreso` (Slice 5) — there's no
+// real home screen yet.
 export function PingScreen({
   result,
   isLoading,
@@ -31,6 +33,7 @@ export function PingScreen({
   onGoToMealLibrary,
   onGoToActivity,
   onGoToWorkouts,
+  onGoToProgress,
 }: PingScreenProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
@@ -72,6 +75,9 @@ export function PingScreen({
           </Button>
           <Button variant="secondary" onClick={onGoToWorkouts}>
             Entrenamientos
+          </Button>
+          <Button variant="secondary" onClick={onGoToProgress}>
+            Progreso
           </Button>
           <Button variant="ghost" onClick={onSignOut}>
             Cerrar sesión

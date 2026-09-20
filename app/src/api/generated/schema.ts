@@ -307,6 +307,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/measurements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MeasurementDto"][];
+                        "application/json": components["schemas"]["MeasurementDto"][];
+                        "text/json": components["schemas"]["MeasurementDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["LogMeasurementRequestDto"];
+                    "text/json": components["schemas"]["LogMeasurementRequestDto"];
+                    "application/*+json": components["schemas"]["LogMeasurementRequestDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MeasurementDto"];
+                        "application/json": components["schemas"]["MeasurementDto"];
+                        "text/json": components["schemas"]["MeasurementDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ping": {
         parameters: {
             query?: never;
@@ -501,6 +565,14 @@ export interface components {
             /** Format: int32 */
             steps?: number | null;
         };
+        LogMeasurementRequestDto: {
+            /** Format: double */
+            weight?: number | null;
+            /** Format: double */
+            waist?: number | null;
+            /** Format: double */
+            neck?: number | null;
+        };
         LogWorkoutRequestDto: {
             type?: string | null;
             /** Format: double */
@@ -555,6 +627,18 @@ export interface components {
             carbs?: number;
             /** Format: int32 */
             fats?: number;
+        };
+        MeasurementDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: double */
+            weight?: number | null;
+            /** Format: double */
+            waist?: number | null;
+            /** Format: double */
+            neck?: number | null;
+            /** Format: date-time */
+            timestamp?: string;
         };
         PingResponseDto: {
             sub?: string | null;

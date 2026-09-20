@@ -254,6 +254,38 @@ export class Workout {
 // WorkoutDtoShape minus the server-owned `id`/`timestamp`.
 export type LogWorkoutData = Omit<WorkoutDtoShape, 'id' | 'timestamp'>;
 
+// Wire shape of api/Reforge.Core/Measurements/IMeasurementsUseCase.cs's MeasurementDto — field
+// names already match this class's own property names. `weight`/`waist`/`neck` are each
+// independently optional (a measurement can log just one of them); the backend rejects a
+// request where all three are null. Timestamp is always server-set, never sent by the client.
+export interface MeasurementDtoShape {
+  id: string;
+  weight: number | null;
+  waist: number | null;
+  neck: number | null;
+  timestamp: string;
+}
+
+export class Measurement {
+  readonly id: string;
+  readonly weight: number | null;
+  readonly waist: number | null;
+  readonly neck: number | null;
+  readonly timestamp: Date;
+
+  constructor(data: MeasurementDtoShape) {
+    this.id = data.id;
+    this.weight = data.weight;
+    this.waist = data.waist;
+    this.neck = data.neck;
+    this.timestamp = new Date(data.timestamp);
+  }
+}
+
+// Fields the user can submit via POST /api/measurements — mirrors LogMeasurementRequestDto,
+// i.e. MeasurementDtoShape minus the server-owned `id`/`timestamp`.
+export type LogMeasurementData = Omit<MeasurementDtoShape, 'id' | 'timestamp'>;
+
 // Wire shape of GET /daily-stats/{date}'s DailyStatsDto.
 export interface DailyStatsDtoShape {
   consumed: MacroValuesShape;
