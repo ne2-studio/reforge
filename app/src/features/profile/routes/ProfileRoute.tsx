@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useProfileStore } from '@/store/profileStore';
 import { useReminderStore } from '@/store/reminderStore';
+import { useFeaturesStore } from '@/store/featuresStore';
+import { useSubscriptionStore } from '@/store/subscriptionStore';
+import { loadSubscription } from '@/features/subscription/useCases';
+import { UsageLimits } from '@/features/subscription/components/UsageLimits';
 import {
   createCustomReminder,
   deleteCustomReminder,
@@ -30,6 +34,8 @@ import type { SaveCustomReminderData, SaveProfileData, SaveReminderSettingsData 
 export function ProfileRoute() {
   const { profile, isLoading, error } = useProfileStore();
   const { settings, customReminders, isLoading: isLoadingReminders, isSavingSettings } = useReminderStore();
+  const { subscriptions: subscriptionsEnabled } = useFeaturesStore();
+  const { subscription } = useSubscriptionStore();
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -42,6 +48,15 @@ export function ProfileRoute() {
       void loadCustomReminders();
     }
   }, [profile]);
+
+  // Slice 9: the Free-tier AI usage indicator, gated on the global feature toggle — never
+  // fetched (or rendered) while it's off, since /api/subscription genuinely 404s then (see
+  // the ticket's fixed HTTP contract).
+  useEffect(() => {
+    if (profile && subscriptionsEnabled) {
+      void loadSubscription();
+    }
+  }, [profile, subscriptionsEnabled]);
 
   const handleSave = async (data: SaveProfileData) => {
     setIsSaving(true);
@@ -109,19 +124,24 @@ export function ProfileRoute() {
 
   if (profile) {
     return (
-      <ProfileEditor
-        profile={profile}
-        isSaving={isSaving}
-        onSave={handleSave}
-        reminderSettings={settings}
-        customReminders={customReminders}
-        isLoadingReminders={isLoadingReminders}
-        isSavingReminderSettings={isSavingSettings}
-        onSaveReminderSettings={handleSaveReminderSettings}
-        onCreateReminder={handleCreateReminder}
-        onUpdateReminder={handleUpdateReminder}
-        onDeleteReminder={handleDeleteReminder}
-      />
+      <div className="space-y-6">
+        <ProfileEditor
+          profile={profile}
+          isSaving={isSaving}
+          onSave={handleSave}
+          reminderSettings={settings}
+          customReminders={customReminders}
+          isLoadingReminders={isLoadingReminders}
+          isSavingReminderSettings={isSavingSettings}
+          onSaveReminderSettings={handleSaveReminderSettings}
+          onCreateReminder={handleCreateReminder}
+          onUpdateReminder={handleUpdateReminder}
+          onDeleteReminder={handleDeleteReminder}
+        />
+        {subscriptionsEnabled && subscription?.tier === 'Free' && (
+          <UsageLimits mealAnalysis={subscription.mealAnalysisUsage} chatMessages={subscription.chatMessagesUsage} />
+        )}
+      </div>
     );
   }
 

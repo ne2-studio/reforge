@@ -3,6 +3,7 @@ import { useAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/api';
 import type { PingResult } from '@/types';
+import { useFeaturesStore } from '@/store/featuresStore';
 import { PingScreen } from '../components/PingScreen';
 
 // Container: fetches from the API directly (allowed exception in
@@ -11,6 +12,7 @@ import { PingScreen } from '../components/PingScreen';
 export function PingRoute() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { subscriptions: subscriptionsEnabled } = useFeaturesStore();
   const [result, setResult] = useState<PingResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +51,8 @@ export function PingRoute() {
       onGoToWorkouts={() => navigate('/entrenamientos')}
       onGoToProgress={() => navigate('/progreso')}
       onGoToHistory={() => navigate('/historial')}
+      showSubscription={subscriptionsEnabled}
+      onGoToSubscription={() => navigate('/suscripcion')}
     />
   );
 }

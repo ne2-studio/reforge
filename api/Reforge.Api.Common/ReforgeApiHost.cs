@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Reforge.Api.Common.Controllers;
 using Reforge.Core.Activities;
 using Reforge.Core.Activities.Application;
 using Reforge.Core.Chat;
@@ -26,6 +29,8 @@ using Reforge.Core.Profiles.Application;
 using Reforge.Core.Reminders;
 using Reforge.Core.Reminders.Application;
 using Reforge.Core.Shared;
+using Reforge.Core.Subscriptions;
+using Reforge.Core.Subscriptions.Application;
 using Reforge.Core.Workouts;
 using Reforge.Core.Workouts.Application;
 using Reforge.Infra;
@@ -47,7 +52,17 @@ public static class ReforgeApiHost
 {
     public static WebApplication Build(WebApplicationBuilder builder)
     {
-        builder.Services.AddControllers();
+        // Slice 9 (docs/plan/02-vertical-slices.md): read straight from configuration at
+        // startup, same place Auth:JwksUri etc. are read below — when off, SubscriptionsController
+        // must not exist at all (its routes 404, not just hidden), so it's removed from the
+        // discovered controller set entirely rather than left registered but gated per-request.
+        var subscriptionsEnabled = builder.Configuration.GetValue<bool>("Features:Subscriptions");
+
+        builder.Services.AddControllers().ConfigureApplicationPartManager(manager =>
+        {
+            if (!subscriptionsEnabled)
+                manager.FeatureProviders.Add(new ExcludeControllerFeatureProvider<SubscriptionsController>());
+        });
         builder.Services.AddEndpointsApiExplorer();
 
         // Keeps every 400 in the one { "error": "..." } shape API-CONVENTIONS.md documents,
@@ -146,6 +161,7 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IRemindersUseCase, RemindersManager>();
         builder.Services.AddScoped<IClosedDaysUseCase, ClosedDaysManager>();
         builder.Services.AddScoped<IChatUseCase, ChatManager>();
+        builder.Services.AddScoped<ISubscriptionsUseCase, SubscriptionsManager>();
 
         var app = builder.Build();
 
@@ -179,3 +195,22 @@ public static class ReforgeApiHost
 // ReforgeApiHost itself is static and can't be used as an ILogger<T> category — this is just a
 // stable name for the log lines emitted from inside it.
 file sealed class ReforgeApiHostLogCategory;
+
+/// <summary>
+/// Removes a single controller type from the discovered controller set entirely — used to make
+/// SubscriptionsController's routes genuinely 404 (not merely hidden/disabled) while
+/// Features:Subscriptions is off. Feature providers run in registration order and the default
+/// ControllerFeatureProvider (added by AddControllers()) has already populated feature.Controllers
+/// by the time this one runs, since it's added via a later ConfigureApplicationPartManager call —
+/// standard ASP.NET Core pattern for excluding a controller by type.
+/// </summary>
+file sealed class ExcludeControllerFeatureProvider<TController> : IApplicationFeatureProvider<ControllerFeature>
+    where TController : ControllerBase
+{
+    public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
+    {
+        var excluded = feature.Controllers.FirstOrDefault(c => c.AsType() == typeof(TController));
+        if (excluded is not null)
+            feature.Controllers.Remove(excluded);
+    }
+}

@@ -9,6 +9,7 @@ using Reforge.Core.Measurements.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Reminders.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
+using Reforge.Core.Subscriptions.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
 using Reforge.Core.Workouts.OutputPorts;
 using Reforge.Infra;
@@ -32,12 +33,21 @@ public static class ServiceRegistration
         services.AddSingleton<ICustomReminderRepository, InMemoryCustomReminderRepository>();
         services.AddSingleton<IClosedDayRepository, InMemoryClosedDayRepository>();
         services.AddSingleton<IChatMessageRepository, InMemoryChatMessageRepository>();
+        services.AddSingleton<ISubscriptionRepository, InMemorySubscriptionRepository>();
+        services.AddSingleton<ICheckoutSessionRepository, InMemoryCheckoutSessionRepository>();
+        services.AddSingleton<IUsageRepository, InMemoryUsageRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserProvider, HttpContextCurrentUserProvider>();
+
+        // Slice 9 (docs/plan/02-vertical-slices.md): identical registration to
+        // Reforge.Infra.ServiceRegistration — pure config reading, no Postgres dependency, so
+        // there's nothing api-lite-specific to fake here.
+        services.Configure<FeaturesOptions>(configuration.GetSection("Features"));
+        services.AddScoped<IFeatureFlags, FeatureFlagsProvider>();
 
         // Slice 8 (docs/plan/00-overview.md, decision 5): fake AI backends, no network calls —
         // used by api-lite and every automated test. Singleton like the in-memory repositories

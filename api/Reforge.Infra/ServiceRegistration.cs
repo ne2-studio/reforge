@@ -10,6 +10,7 @@ using Reforge.Core.Measurements.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Reminders.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
+using Reforge.Core.Subscriptions.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
 using Reforge.Core.Workouts.OutputPorts;
 using Reforge.Infra.Chat;
@@ -37,12 +38,21 @@ public static class ServiceRegistration
         services.AddScoped<ICustomReminderRepository, CustomReminderRepository>();
         services.AddScoped<IClosedDayRepository, ClosedDayRepository>();
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<ICheckoutSessionRepository, CheckoutSessionRepository>();
+        services.AddScoped<IUsageRepository, UsageRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserProvider, HttpContextCurrentUserProvider>();
+
+        // Slice 9 (docs/plan/02-vertical-slices.md): the Features:Subscriptions global toggle —
+        // pure config reading, so it lives in Reforge.Infra.Common and is registered identically
+        // in both images (see Reforge.Infra.Lite.ServiceRegistration).
+        services.Configure<FeaturesOptions>(configuration.GetSection("Features"));
+        services.AddScoped<IFeatureFlags, FeatureFlagsProvider>();
 
         // Slice 8 (docs/plan/02-vertical-slices.md): real OpenAI-backed adapters. See
         // Reforge.Infra.Lite.ServiceRegistration for the fakes used by api-lite/automated tests —

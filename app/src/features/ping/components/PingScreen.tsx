@@ -15,6 +15,8 @@ interface PingScreenProps {
   onGoToWorkouts: () => void;
   onGoToProgress: () => void;
   onGoToHistory: () => void;
+  showSubscription: boolean;
+  onGoToSubscription: () => void;
 }
 
 // Presentational — no react-router-dom/store/useCases imports. The one real authenticated
@@ -36,6 +38,8 @@ export function PingScreen({
   onGoToWorkouts,
   onGoToProgress,
   onGoToHistory,
+  showSubscription,
+  onGoToSubscription,
 }: PingScreenProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
@@ -84,6 +88,11 @@ export function PingScreen({
           <Button variant="secondary" onClick={onGoToHistory}>
             Historial
           </Button>
+          {showSubscription && (
+            <Button variant="secondary" onClick={onGoToSubscription}>
+              Suscripción
+            </Button>
+          )}
           <Button variant="ghost" onClick={onSignOut}>
             Cerrar sesión
           </Button>

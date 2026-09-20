@@ -6,6 +6,8 @@ using Reforge.Core.Chat.OutputPorts;
 using Reforge.Core.ClosedDays.Application;
 using Reforge.Core.Meals.Domain;
 using Reforge.Core.Shared;
+using Reforge.Core.Subscriptions.Application;
+using Reforge.Core.Subscriptions.Domain;
 using Reforge.Core.Tests.Fakes;
 using Reforge.Infra.Lite;
 
@@ -27,6 +29,9 @@ public class ChatManagerTests
         InMemoryChatMessageRepository? chatMessageRepository = null,
         FakeClosedDayRepository? closedDayRepository = null,
         FakeAiChatBackend? aiChatBackend = null,
+        FakeFeatureFlags? featureFlags = null,
+        FakeSubscriptionRepository? subscriptionRepository = null,
+        FakeUsageRepository? usageRepository = null,
         DateTime? now = null,
         Guid? nextId = null)
     {
@@ -40,6 +45,17 @@ public class ChatManagerTests
             clock,
             new FakeIdGenerator(Guid.NewGuid()));
 
+        var subscriptionsManager = new SubscriptionsManager(
+            new FakeCurrentUserProvider(UserId),
+            subscriptionRepository ?? new FakeSubscriptionRepository(),
+            new FakeCheckoutSessionRepository(),
+            usageRepository ?? new FakeUsageRepository(),
+            clock,
+            new FakeIdGenerator(Guid.NewGuid()));
+
+        // Slice 9: featureFlags defaults to off so every pre-existing test here keeps proving
+        // today's unlimited behavior, unchanged. Usage-limit enforcement itself is covered by
+        // SubscriptionsManagerTests and the dedicated tests at the bottom of this file.
         return new ChatManager(
             new FakeCurrentUserProvider(UserId),
             chatMessageRepository ?? new InMemoryChatMessageRepository(),
@@ -47,6 +63,8 @@ public class ChatManagerTests
             profileRepository ?? new FakeProfileRepository(),
             closedDaysManager,
             aiChatBackend ?? new FakeAiChatBackend(),
+            featureFlags ?? new FakeFeatureFlags(),
+            subscriptionsManager,
             clock,
             new FakeIdGenerator(nextId ?? Guid.NewGuid()));
     }
@@ -184,5 +202,54 @@ public class ChatManagerTests
         Assert.Equal(2, result.Value.Count);
         Assert.Equal(older, result.Value[0].Timestamp);
         Assert.Equal(newer, result.Value[1].Timestamp);
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_WhenSubscriptionsFlagIsOff_IsNeverLimited_RegardlessOfUsageCount()
+    {
+        var usageRepository = new FakeUsageRepository();
+        usageRepository.Seed(UserId, UsageAction.ChatMessage, CurrentMonth(), count: 50);
+        var manager = CreateManager(featureFlags: new FakeFeatureFlags(subscriptionsEnabled: false), usageRepository: usageRepository);
+
+        var result = await manager.SendMessageAsync(new SendChatMessageRequestDto("Hola"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_WhenSubscriptionsFlagIsOn_AndFreeTierUsageIsUnderTheLimit_SucceedsAndIncrementsUsage()
+    {
+        var usageRepository = new FakeUsageRepository();
+        usageRepository.Seed(UserId, UsageAction.ChatMessage, CurrentMonth(), count: 9);
+        var manager = CreateManager(featureFlags: new FakeFeatureFlags(subscriptionsEnabled: true), usageRepository: usageRepository);
+
+        var result = await manager.SendMessageAsync(new SendChatMessageRequestDto("Hola"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10, await usageRepository.GetCountAsync(UserId, UsageAction.ChatMessage, CurrentMonth()));
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_WhenSubscriptionsFlagIsOn_AndFreeTierUsageIsAtTheLimit_IsForbidden()
+    {
+        var chatMessageRepository = new InMemoryChatMessageRepository();
+        var usageRepository = new FakeUsageRepository();
+        usageRepository.Seed(UserId, UsageAction.ChatMessage, CurrentMonth(), count: 10);
+        var manager = CreateManager(
+            chatMessageRepository: chatMessageRepository,
+            featureFlags: new FakeFeatureFlags(subscriptionsEnabled: true),
+            usageRepository: usageRepository);
+
+        var result = await manager.SendMessageAsync(new SendChatMessageRequestDto("Hola"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ApplicationErrorCode.Forbidden, result.Error.Code);
+        Assert.Empty(await chatMessageRepository.GetByUserIdAsync(UserId));
+    }
+
+    private static DateOnly CurrentMonth()
+    {
+        var now = new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc);
+        return new DateOnly(now.Year, now.Month, 1);
     }
 }

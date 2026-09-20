@@ -10,6 +10,8 @@ import { measurementsApi } from './api/resources/measurements';
 import { remindersApi } from './api/resources/reminders';
 import { closedDaysApi } from './api/resources/closedDays';
 import { coachApi } from './api/resources/coach';
+import { featuresApi } from './api/resources/features';
+import { subscriptionApi } from './api/resources/subscription';
 
 // Single fetch client for the backend, namespaced per resource — see
 // docs/architecture/frontend.md.
@@ -24,4 +26,6 @@ export const api = {
   reminders: remindersApi,
   closedDays: closedDaysApi,
   coach: coachApi,
+  features: featuresApi,
+  subscription: subscriptionApi,
 };

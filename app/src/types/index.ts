@@ -474,3 +474,45 @@ export class WeeklyProgress {
     this.insights = data.insights;
   }
 }
+
+export type SubscriptionTier = 'Free' | 'Premium';
+export type SubscriptionStatus = 'None' | 'Active' | 'Canceled';
+
+// Wire shape of a single usage counter within SubscriptionDto's `usage` object — a passive
+// data row with no derived behavior of its own, same reasoning as WeeklyDayDtoShape.
+export interface UsageLimitDtoShape {
+  count: number;
+  limit: number;
+}
+
+// Wire shape of the Slice 9 backend's `GET /api/subscription` (see the ticket's fixed HTTP
+// contract — api/'s Subscriptions feature is being built in parallel against this same
+// shape). `limit` is always 10 regardless of tier per that backend's current design — this
+// class doesn't try to hide that; callers must gate any usage-bar UI on `tier === 'Free'`
+// themselves, same as the ticket's own instruction, rather than this class silently lying
+// about a Premium row being "unlimited".
+export interface SubscriptionDtoShape {
+  tier: SubscriptionTier;
+  status: SubscriptionStatus;
+  currentPeriodEnd: string | null;
+  usage: {
+    mealAnalysis: UsageLimitDtoShape;
+    chatMessages: UsageLimitDtoShape;
+  };
+}
+
+export class Subscription {
+  readonly tier: SubscriptionTier;
+  readonly status: SubscriptionStatus;
+  readonly currentPeriodEnd: Date | null;
+  readonly mealAnalysisUsage: UsageLimitDtoShape;
+  readonly chatMessagesUsage: UsageLimitDtoShape;
+
+  constructor(data: SubscriptionDtoShape) {
+    this.tier = data.tier;
+    this.status = data.status;
+    this.currentPeriodEnd = data.currentPeriodEnd ? new Date(data.currentPeriodEnd) : null;
+    this.mealAnalysisUsage = data.usage.mealAnalysis;
+    this.chatMessagesUsage = data.usage.chatMessages;
+  }
+}

@@ -8,6 +8,8 @@ using Reforge.Core.Profiles.Domain;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared;
 using Reforge.Core.Shared.OutputPorts;
+using Reforge.Core.Subscriptions;
+using Reforge.Core.Subscriptions.Domain;
 
 namespace Reforge.Core.Chat.Application;
 
@@ -18,6 +20,8 @@ public class ChatManager(
     IProfileRepository profileRepository,
     IClosedDaysUseCase closedDaysUseCase,
     IAiChatBackend aiChatBackend,
+    IFeatureFlags featureFlags,
+    ISubscriptionsUseCase subscriptionsUseCase,
     IClock clock,
     IIdGenerator idGenerator) : IChatUseCase
 {
@@ -35,6 +39,16 @@ public class ChatManager(
     public async Task<Result<string>> SendMessageAsync(SendChatMessageRequestDto request)
     {
         var userId = currentUserProvider.GetUserId();
+
+        // Slice 9: skip the usage-limit check entirely when the flag is off, rather than calling
+        // a "always succeeds" no-op — today's unlimited behavior stays unchanged verbatim.
+        if (featureFlags.SubscriptionsEnabled())
+        {
+            var limitCheck = await subscriptionsUseCase.CheckUsageLimitAsync(UsageAction.ChatMessage);
+            if (limitCheck.IsFailure)
+                return Result.Failure<string>(limitCheck.Error);
+        }
+
         var now = clock.UtcNow();
         var today = DateOnly.FromDateTime(now);
 
@@ -79,6 +93,10 @@ public class ChatManager(
 
         var chatMessage = new ChatMessage(idGenerator.NewId(), userId, request.Message, reply, now);
         await chatMessageRepository.AddAsync(chatMessage);
+
+        // Only after the message actually succeeded and was persisted — never speculatively.
+        if (featureFlags.SubscriptionsEnabled())
+            await subscriptionsUseCase.RecordUsageAsync(UsageAction.ChatMessage);
 
         return Result.Success(reply);
     }

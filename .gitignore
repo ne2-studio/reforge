@@ -5,3 +5,6 @@
 /reforge-frontend
 /recomp-coach-backend
 
+# Claude Code agent worktree scratch space
+/.claude/worktrees/
+

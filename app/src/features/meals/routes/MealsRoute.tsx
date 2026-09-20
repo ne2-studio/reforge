@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { isApiErrorWithStatus } from '@/api';
 import { useMealsStore } from '@/store/mealsStore';
 import { useMealLibraryStore } from '@/store/mealLibraryStore';
+import { useFeaturesStore } from '@/store/featuresStore';
 import { loadMeals, loadDailyStats, logMeal, analyzeAndLogMeal, todayDateString } from '../useCases';
 import { loadLibrary, saveToLibrary } from '@/features/mealLibrary/useCases';
 import { DailyStats } from '../components/DailyStats';
 import { MealLogger } from '../components/MealLogger';
 import { FloatingCoachButton } from '@/features/coach/components/FloatingCoachButton';
+import { AILimitReached } from '@/features/subscription/components/AILimitReached';
 import type { AnalyzeMealData, SaveMealData, SaveMealLibraryItemData } from '@/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -27,8 +30,10 @@ export function MealsRoute() {
   const navigate = useNavigate();
   const { meals, dailyStats, isLoading, error } = useMealsStore();
   const { items: libraryItems } = useMealLibraryStore();
+  const { subscriptions: subscriptionsEnabled } = useFeaturesStore();
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLimitReachedOpen, setIsLimitReachedOpen] = useState(false);
 
   useEffect(() => {
     void loadMeals();
@@ -51,13 +56,22 @@ export function MealsRoute() {
     }
   };
 
+  // Slice 9: a 403 on the analyze-meal endpoint means the caller's monthly AI usage limit was
+  // hit — but only when featuresStore.subscriptions is true, since that's the only backend
+  // configuration where this endpoint enforces any such limit at all; with the toggle off, a
+  // 403 here would mean something else entirely and must fall through to the generic error
+  // toast unchanged.
   const handleAnalyze = async (data: AnalyzeMealData) => {
     setIsAnalyzing(true);
     try {
       await analyzeAndLogMeal(data);
       toast.success('¡Comida analizada y guardada! ✅');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al analizar la comida');
+      if (subscriptionsEnabled && isApiErrorWithStatus(err, 403)) {
+        setIsLimitReachedOpen(true);
+      } else {
+        toast.error(err instanceof Error ? err.message : 'Error al analizar la comida');
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -130,6 +144,14 @@ export function MealsRoute() {
         </div>
       </div>
       <FloatingCoachButton onClick={() => navigate('/chat')} />
+      {subscriptionsEnabled && (
+        <AILimitReached
+          open={isLimitReachedOpen}
+          onOpenChange={setIsLimitReachedOpen}
+          feature="mealAnalysis"
+          onUpgrade={() => navigate('/suscripcion')}
+        />
+      )}
     </div>
   );
 }

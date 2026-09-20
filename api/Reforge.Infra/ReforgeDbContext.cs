@@ -7,6 +7,7 @@ using Reforge.Core.Meals.Domain;
 using Reforge.Core.Measurements.Domain;
 using Reforge.Core.Profiles.Domain;
 using Reforge.Core.Reminders.Domain;
+using Reforge.Core.Subscriptions.Domain;
 using Reforge.Core.Users.Domain;
 using Reforge.Core.Workouts.Domain;
 
@@ -25,6 +26,9 @@ public class ReforgeDbContext(DbContextOptions<ReforgeDbContext> options) : DbCo
     public DbSet<CustomReminder> CustomReminders => Set<CustomReminder>();
     public DbSet<ClosedDay> ClosedDays => Set<ClosedDay>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<CheckoutSession> CheckoutSessions => Set<CheckoutSession>();
+    public DbSet<UsageRecord> UsageRecords => Set<UsageRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

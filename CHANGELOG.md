@@ -29,3 +29,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   superávit calórico con la racha de días en déficit.
 - Coach de IA: chatea con tu coach personal desde un botón flotante en Comidas, y registra una
   comida describiéndola en texto libre para que la IA calcule sus macros y la guarde por ti.
+- Suscripción Premium: consulta tu plan y tu uso de funciones de IA desde el perfil, mejora tu
+  plan o gestiona tu facturación, y recibe un aviso cuando alcances el límite de uso gratuito del
+  coach de IA.

@@ -8,8 +8,9 @@ namespace Reforge.Core.Chat;
 /// status/recent meal history/recent chat history, the "cerrar mi día" special command (delegated
 /// to IClosedDaysUseCase.CloseDayAsync rather than duplicating that logic — see that interface's
 /// doc comment), and chat message persistence. Both verbs resolve the caller's identity
-/// themselves via ICurrentUserProvider; it is never a parameter here. Unlike the source backend,
-/// there's no per-message usage-limit increment here — that's Stripe/Slice 9, out of scope.
+/// themselves via ICurrentUserProvider; it is never a parameter here. Slice 9 adds the Free-tier monthly
+/// usage limit for SendMessageAsync — see ChatManager and
+/// Reforge.Core.Subscriptions.ISubscriptionsUseCase.
 /// </summary>
 public interface IChatUseCase
 {

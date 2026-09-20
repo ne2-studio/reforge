@@ -5,6 +5,8 @@ using Reforge.Core.Meals.Domain;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Profiles.Domain;
 using Reforge.Core.Shared;
+using Reforge.Core.Subscriptions.Application;
+using Reforge.Core.Subscriptions.Domain;
 using Reforge.Core.Tests.Fakes;
 using Reforge.Infra.Lite;
 
@@ -13,6 +15,39 @@ namespace Reforge.Core.Tests.Meals;
 public class MealsManagerTests
 {
     private static readonly UserId UserId = new("auth0|meals-user");
+
+    // Slice 9: featureFlags defaults to off so every pre-existing test here keeps proving today's
+    // unlimited behavior, unchanged. Usage-limit enforcement itself is covered by
+    // SubscriptionsManagerTests and the dedicated tests at the bottom of this file.
+    private static MealsManager CreateManager(
+        FakeMealRepository? mealRepository = null,
+        FakeProfileRepository? profileRepository = null,
+        FakeMealAnalysisBackend? analysisBackend = null,
+        FakeFeatureFlags? featureFlags = null,
+        FakeSubscriptionRepository? subscriptionRepository = null,
+        FakeUsageRepository? usageRepository = null,
+        DateTime? now = null,
+        Guid? nextId = null)
+    {
+        var clock = new FakeClock(now ?? DateTime.UtcNow);
+        var subscriptionsManager = new SubscriptionsManager(
+            new FakeCurrentUserProvider(UserId),
+            subscriptionRepository ?? new FakeSubscriptionRepository(),
+            new FakeCheckoutSessionRepository(),
+            usageRepository ?? new FakeUsageRepository(),
+            clock,
+            new FakeIdGenerator(Guid.NewGuid()));
+
+        return new MealsManager(
+            new FakeCurrentUserProvider(UserId),
+            mealRepository ?? new FakeMealRepository(),
+            profileRepository ?? new FakeProfileRepository(),
+            analysisBackend ?? new FakeMealAnalysisBackend(),
+            featureFlags ?? new FakeFeatureFlags(),
+            subscriptionsManager,
+            clock,
+            new FakeIdGenerator(nextId ?? Guid.NewGuid()));
+    }
 
     [Fact]
     public async Task GetMealsAsync_ReturnsTheCallersOwnMeals_MostRecentFirst()
@@ -25,13 +60,7 @@ public class MealsManagerTests
         repository.Seed(older);
         repository.Seed(newer);
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            repository,
-            new FakeProfileRepository(),
-            new FakeMealAnalysisBackend(),
-            new FakeClock(DateTime.UtcNow),
-            new FakeIdGenerator(Guid.NewGuid()));
+        var manager = CreateManager(mealRepository: repository, nextId: Guid.NewGuid());
 
         var result = await manager.GetMealsAsync();
 
@@ -48,13 +77,7 @@ public class MealsManagerTests
         var now = new DateTime(2026, 3, 4, 12, 30, 0, DateTimeKind.Utc);
         var id = Guid.NewGuid();
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            repository,
-            new FakeProfileRepository(),
-            new FakeMealAnalysisBackend(),
-            new FakeClock(now),
-            new FakeIdGenerator(id));
+        var manager = CreateManager(mealRepository: repository, now: now, nextId: id);
 
         var request = new SaveMealRequestDto(
             MealText: "Chicken and rice",
@@ -84,13 +107,7 @@ public class MealsManagerTests
     [Fact]
     public async Task GetDailyStatsAsync_WhenCallerHasNoProfile_ReturnsNotFound()
     {
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            new FakeMealRepository(),
-            new FakeProfileRepository(),
-            new FakeMealAnalysisBackend(),
-            new FakeClock(DateTime.UtcNow),
-            new FakeIdGenerator(Guid.NewGuid()));
+        var manager = CreateManager(nextId: Guid.NewGuid());
 
         var result = await manager.GetDailyStatsAsync(new DateOnly(2026, 3, 4));
 
@@ -110,13 +127,7 @@ public class MealsManagerTests
         var profileRepository = new FakeProfileRepository();
         profileRepository.Seed(new UserProfile(UserId, DateTime.UtcNow, weight: 70, goal: "recomp", calorieTarget: 2200));
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            mealRepository,
-            profileRepository,
-            new FakeMealAnalysisBackend(),
-            new FakeClock(DateTime.UtcNow),
-            new FakeIdGenerator(Guid.NewGuid()));
+        var manager = CreateManager(mealRepository: mealRepository, profileRepository: profileRepository, nextId: Guid.NewGuid());
 
         var result = await manager.GetDailyStatsAsync(date);
 
@@ -138,13 +149,7 @@ public class MealsManagerTests
         var profileRepository = new FakeProfileRepository();
         profileRepository.Seed(new UserProfile(UserId, DateTime.UtcNow, weight: weight, goal: goal, calorieTarget: calorieTarget));
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            new FakeMealRepository(),
-            profileRepository,
-            new FakeMealAnalysisBackend(),
-            new FakeClock(DateTime.UtcNow),
-            new FakeIdGenerator(Guid.NewGuid()));
+        var manager = CreateManager(profileRepository: profileRepository, nextId: Guid.NewGuid());
 
         var result = await manager.GetDailyStatsAsync(new DateOnly(2026, 3, 4));
 
@@ -161,13 +166,7 @@ public class MealsManagerTests
         var profileRepository = new FakeProfileRepository();
         profileRepository.Seed(new UserProfile(UserId, DateTime.UtcNow));
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            new FakeMealRepository(),
-            profileRepository,
-            new FakeMealAnalysisBackend(),
-            new FakeClock(DateTime.UtcNow),
-            new FakeIdGenerator(Guid.NewGuid()));
+        var manager = CreateManager(profileRepository: profileRepository, nextId: Guid.NewGuid());
 
         var result = await manager.GetDailyStatsAsync(new DateOnly(2026, 3, 4));
 
@@ -191,13 +190,7 @@ public class MealsManagerTests
         var now = new DateTime(2026, 3, 4, 12, 30, 0, DateTimeKind.Utc);
         var id = Guid.NewGuid();
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            mealRepository,
-            new FakeProfileRepository(),
-            analysisBackend,
-            new FakeClock(now),
-            new FakeIdGenerator(id));
+        var manager = CreateManager(mealRepository: mealRepository, analysisBackend: analysisBackend, now: now, nextId: id);
 
         var request = new AnalyzeMealRequestDto(MealText: "Chicken and rice", Category: "lunch", Time: "13:00");
 
@@ -230,13 +223,7 @@ public class MealsManagerTests
         profileRepository.Seed(profile);
         var analysisBackend = new FakeMealAnalysisBackend();
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            new FakeMealRepository(),
-            profileRepository,
-            analysisBackend,
-            new FakeClock(DateTime.UtcNow),
-            new FakeIdGenerator(Guid.NewGuid()));
+        var manager = CreateManager(profileRepository: profileRepository, analysisBackend: analysisBackend, nextId: Guid.NewGuid());
 
         await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
 
@@ -253,19 +240,81 @@ public class MealsManagerTests
             NextAnalysis = Result.Failure<MealAnalysisDto>(ApplicationError.ExternalDependencyUnavailable("Meal analysis is not configured."))
         };
 
-        var manager = new MealsManager(
-            new FakeCurrentUserProvider(UserId),
-            mealRepository,
-            new FakeProfileRepository(),
-            analysisBackend,
-            new FakeClock(DateTime.UtcNow),
-            new FakeIdGenerator(Guid.NewGuid()));
+        var manager = CreateManager(mealRepository: mealRepository, analysisBackend: analysisBackend, nextId: Guid.NewGuid());
 
         var result = await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
 
         Assert.True(result.IsFailure);
         Assert.Equal(ApplicationErrorCode.ExternalDependencyUnavailable, result.Error.Code);
         Assert.Empty(await mealRepository.GetByUserIdAsync(UserId));
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveMealAsync_WhenSubscriptionsFlagIsOff_IsNeverLimited_RegardlessOfUsageCount()
+    {
+        var usageRepository = new FakeUsageRepository();
+        usageRepository.Seed(UserId, UsageAction.MealAnalysis, CurrentMonth(), count: 50);
+        var manager = CreateManager(featureFlags: new FakeFeatureFlags(subscriptionsEnabled: false), usageRepository: usageRepository);
+
+        var result = await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveMealAsync_WhenSubscriptionsFlagIsOn_AndFreeTierUsageIsUnderTheLimit_Succeeds()
+    {
+        var usageRepository = new FakeUsageRepository();
+        usageRepository.Seed(UserId, UsageAction.MealAnalysis, CurrentMonth(), count: 9);
+        var manager = CreateManager(featureFlags: new FakeFeatureFlags(subscriptionsEnabled: true), usageRepository: usageRepository);
+
+        var result = await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10, await usageRepository.GetCountAsync(UserId, UsageAction.MealAnalysis, CurrentMonth()));
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveMealAsync_WhenSubscriptionsFlagIsOn_AndFreeTierUsageIsAtTheLimit_IsForbidden()
+    {
+        var mealRepository = new FakeMealRepository();
+        var usageRepository = new FakeUsageRepository();
+        usageRepository.Seed(UserId, UsageAction.MealAnalysis, CurrentMonth(), count: 10);
+        var manager = CreateManager(
+            mealRepository: mealRepository,
+            featureFlags: new FakeFeatureFlags(subscriptionsEnabled: true),
+            usageRepository: usageRepository);
+
+        var result = await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ApplicationErrorCode.Forbidden, result.Error.Code);
+        Assert.Empty(await mealRepository.GetByUserIdAsync(UserId));
+    }
+
+    [Fact]
+    public async Task AnalyzeAndSaveMealAsync_WhenSubscriptionsFlagIsOn_AndCallerIsPremium_IsNeverLimited()
+    {
+        var subscriptionRepository = new FakeSubscriptionRepository();
+        subscriptionRepository.Seed(new Subscription(
+            UserId, SubscriptionTiers.Premium, SubscriptionStatuses.Active,
+            currentPeriodEnd: DateTime.UtcNow.AddDays(20), updatedAt: DateTime.UtcNow));
+        var usageRepository = new FakeUsageRepository();
+        usageRepository.Seed(UserId, UsageAction.MealAnalysis, CurrentMonth(), count: 50);
+        var manager = CreateManager(
+            featureFlags: new FakeFeatureFlags(subscriptionsEnabled: true),
+            subscriptionRepository: subscriptionRepository,
+            usageRepository: usageRepository);
+
+        var result = await manager.AnalyzeAndSaveMealAsync(new AnalyzeMealRequestDto("Chicken and rice", "lunch", "13:00"));
+
+        Assert.True(result.IsSuccess);
+    }
+
+    private static DateOnly CurrentMonth()
+    {
+        var now = DateTime.UtcNow;
+        return new DateOnly(now.Year, now.Month, 1);
     }
 
     private static Meal NewMeal(

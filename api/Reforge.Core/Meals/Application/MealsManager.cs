@@ -4,6 +4,8 @@ using Reforge.Core.Profiles.Domain;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared;
 using Reforge.Core.Shared.OutputPorts;
+using Reforge.Core.Subscriptions;
+using Reforge.Core.Subscriptions.Domain;
 
 namespace Reforge.Core.Meals.Application;
 
@@ -12,6 +14,8 @@ public class MealsManager(
     IMealRepository mealRepository,
     IProfileRepository profileRepository,
     IMealAnalysisBackend mealAnalysisBackend,
+    IFeatureFlags featureFlags,
+    ISubscriptionsUseCase subscriptionsUseCase,
     IClock clock,
     IIdGenerator idGenerator) : IMealsUseCase
 {
@@ -50,6 +54,16 @@ public class MealsManager(
     public async Task<Result<MealDto>> AnalyzeAndSaveMealAsync(AnalyzeMealRequestDto request)
     {
         var userId = currentUserProvider.GetUserId();
+
+        // Slice 9: skip the usage-limit check entirely when the flag is off, rather than calling
+        // a "always succeeds" no-op — today's unlimited behavior stays unchanged verbatim.
+        if (featureFlags.SubscriptionsEnabled())
+        {
+            var limitCheck = await subscriptionsUseCase.CheckUsageLimitAsync(UsageAction.MealAnalysis);
+            if (limitCheck.IsFailure)
+                return Result.Failure<MealDto>(limitCheck.Error);
+        }
+
         // Profile is optional context for the AI, same as recomp-coach-backend's
         // routes/meals.ts /analyze-meal handler — never fail here just because it's missing.
         var profile = await profileRepository.GetByUserIdAsync(userId);
@@ -76,6 +90,10 @@ public class MealsManager(
             feedback: analysis.Feedback);
 
         await mealRepository.AddAsync(meal);
+
+        // Only after the meal actually succeeded and was persisted — never speculatively.
+        if (featureFlags.SubscriptionsEnabled())
+            await subscriptionsUseCase.RecordUsageAsync(UsageAction.MealAnalysis);
 
         return Result.Success(ToDto(meal));
     }
