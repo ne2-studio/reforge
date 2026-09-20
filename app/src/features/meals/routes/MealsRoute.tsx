@@ -19,8 +19,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 // Container for /comidas. Loads the caller's meals plus today's daily-stats through the
 // meals store on mount (shared between DailyStats and this route's own today's-meals list —
 // see docs/architecture/frontend.md's Route-may-call-api-directly exception, which does NOT
-// apply here). No MealHistory/DayHistory here — those need day-history/closed days, deferred
-// to Slice 7 (docs/plan/02-vertical-slices.md).
+// apply here). Only shows today's meals — full meal history, day-close, day history, and
+// weekly progress live at /historial (features/dayClose, Slice 7).
 export function MealsRoute() {
   const { meals, dailyStats, isLoading, error } = useMealsStore();
   const { items: libraryItems } = useMealLibraryStore();

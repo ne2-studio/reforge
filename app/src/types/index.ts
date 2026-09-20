@@ -365,3 +365,78 @@ export class CustomReminder {
 // /api/custom-reminders/{id} — mirrors SaveCustomReminderRequestDto, i.e.
 // CustomReminderDtoShape minus the server-owned `id`/`updatedAt`.
 export type SaveCustomReminderData = Omit<CustomReminderDtoShape, 'id' | 'updatedAt'>;
+
+// Wire shape of api/Reforge.Core/ClosedDays/IClosedDaysUseCase.cs's ClosedDayDto — field names
+// already match this class's own property names. `date` is a DateOnly (`yyyy-MM-dd`), `closedAt`
+// a full ISO 8601 timestamp — see that file's own doc-comment on why: date-close is a whole-day
+// concept, closedAt is just the audit trail of when the button was pressed.
+export interface ClosedDayDtoShape {
+  date: string;
+  closedAt: string;
+  totalCalories: number;
+  mealsCount: number;
+  isTrainingDay: boolean;
+  analysis: string;
+}
+
+export class ClosedDay {
+  readonly date: string;
+  readonly closedAt: Date;
+  readonly totalCalories: number;
+  readonly mealsCount: number;
+  readonly isTrainingDay: boolean;
+  readonly analysis: string;
+
+  constructor(data: ClosedDayDtoShape) {
+    this.date = data.date;
+    this.closedAt = new Date(data.closedAt);
+    this.totalCalories = data.totalCalories;
+    this.mealsCount = data.mealsCount;
+    this.isTrainingDay = data.isTrainingDay;
+    this.analysis = data.analysis;
+  }
+}
+
+// Wire shape of WeeklyDayDto — one day's row within WeeklyProgressDto's `days`. Kept as a plain
+// interface, not a class, since it's a passive data row with no derived behavior of its own
+// (same reasoning MacroValuesShape/DailyStatsDtoShape would use if MacroValues weren't already
+// a class for other reasons) — WeeklyProgress is the one class that owns hydration for both.
+export interface WeeklyDayDtoShape {
+  date: string;
+  targetCalories: number;
+  consumedCalories: number;
+  deficit: number;
+  mealsCount: number;
+  isClosed: boolean;
+}
+
+// Wire shape of WeeklyProgressDto.
+export interface WeeklyProgressDtoShape {
+  days: WeeklyDayDtoShape[];
+  totalDeficit: number;
+  daysInDeficit: number;
+  daysInSurplus: number;
+  daysWithMeals: number;
+  adherenceStreak: number;
+  insights: string[];
+}
+
+export class WeeklyProgress {
+  readonly days: WeeklyDayDtoShape[];
+  readonly totalDeficit: number;
+  readonly daysInDeficit: number;
+  readonly daysInSurplus: number;
+  readonly daysWithMeals: number;
+  readonly adherenceStreak: number;
+  readonly insights: string[];
+
+  constructor(data: WeeklyProgressDtoShape) {
+    this.days = data.days;
+    this.totalDeficit = data.totalDeficit;
+    this.daysInDeficit = data.daysInDeficit;
+    this.daysInSurplus = data.daysInSurplus;
+    this.daysWithMeals = data.daysWithMeals;
+    this.adherenceStreak = data.adherenceStreak;
+    this.insights = data.insights;
+  }
+}
