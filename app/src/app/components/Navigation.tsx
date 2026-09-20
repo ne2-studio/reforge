@@ -21,8 +21,8 @@ export const Navigation = () => {
   return (
     <Tabs value={activeTab} className="w-full">
       {/* Mobile bottom nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t-2 border-border md:hidden z-10 backdrop-blur-lg bg-card/90 mobile-nav-bottom">
-        <TabsList className="grid w-full grid-cols-5 h-16 bg-transparent rounded-none border-0">
+      <div className="fixed bottom-0 left-0 right-0 md:hidden z-10 px-3 pb-3 mobile-nav-bottom">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-5 h-16 bg-card/90 backdrop-blur-lg rounded-2xl border-2 border-border shadow-lg">
           <TabsTrigger
             value="home"
             onClick={() => navigate('/home')}
