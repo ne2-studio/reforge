@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reforge.Core.Activities.OutputPorts;
 using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
+using Reforge.Core.Workouts.OutputPorts;
 using Reforge.Infra.Persistence;
 
 namespace Reforge.Infra;
@@ -21,6 +23,8 @@ public static class ServiceRegistration
         services.AddScoped<IProfileRepository, ProfileRepository>();
         services.AddScoped<IMealRepository, MealRepository>();
         services.AddScoped<IMealLibraryRepository, MealLibraryRepository>();
+        services.AddScoped<IActivityRepository, ActivityRepository>();
+        services.AddScoped<IWorkoutRepository, WorkoutRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();

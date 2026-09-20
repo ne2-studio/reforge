@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reforge.Core.Activities.OutputPorts;
 using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
 using Reforge.Core.Users.OutputPorts;
+using Reforge.Core.Workouts.OutputPorts;
 using Reforge.Infra;
 
 namespace Reforge.Infra.Lite;
@@ -19,6 +21,8 @@ public static class ServiceRegistration
         services.AddSingleton<IProfileRepository, InMemoryProfileRepository>();
         services.AddSingleton<IMealRepository, InMemoryMealRepository>();
         services.AddSingleton<IMealLibraryRepository, InMemoryMealLibraryRepository>();
+        services.AddSingleton<IActivityRepository, InMemoryActivityRepository>();
+        services.AddSingleton<IWorkoutRepository, InMemoryWorkoutRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();

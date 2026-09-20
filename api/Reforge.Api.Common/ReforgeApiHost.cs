@@ -7,6 +7,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Reforge.Core.Activities;
+using Reforge.Core.Activities.Application;
 using Reforge.Core.MealLibrary;
 using Reforge.Core.MealLibrary.Application;
 using Reforge.Core.Meals;
@@ -16,6 +18,8 @@ using Reforge.Core.Ping.Application;
 using Reforge.Core.Profiles;
 using Reforge.Core.Profiles.Application;
 using Reforge.Core.Shared;
+using Reforge.Core.Workouts;
+using Reforge.Core.Workouts.Application;
 using Reforge.Infra;
 using Serilog;
 
@@ -128,6 +132,8 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IProfileUseCase, ProfileManager>();
         builder.Services.AddScoped<IMealsUseCase, MealsManager>();
         builder.Services.AddScoped<IMealLibraryUseCase, MealLibraryManager>();
+        builder.Services.AddScoped<IActivitiesUseCase, ActivitiesManager>();
+        builder.Services.AddScoped<IWorkoutsUseCase, WorkoutsManager>();
 
         var app = builder.Build();
 
