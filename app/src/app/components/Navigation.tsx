@@ -13,7 +13,7 @@ export const Navigation = () => {
     if (path.startsWith('/actividad') || path.startsWith('/entrenamientos')) return 'workouts';
     if (path.startsWith('/chat')) return 'chat';
     if (path.startsWith('/progreso')) return 'progress';
-    return 'home';
+    return '';
   };
 
   const activeTab = getActiveTab();

@@ -55,3 +55,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   quien tiene un gasto calórico bajo; ahora el déficit es del 15% sobre tu gasto calórico
   total. Además, los entrenos y actividades registrados hoy suman kcal a tu objetivo (cardio y
   NEAT, según duración/pasos; fuerza, una cantidad fija por sesión).
+- En la pantalla de Perfil ya no aparece la pestaña "Inicio" marcada como activa en la barra de
+  navegación.
