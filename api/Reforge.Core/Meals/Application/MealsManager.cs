@@ -1,3 +1,5 @@
+using Reforge.Core.Activities.Domain;
+using Reforge.Core.Activities.OutputPorts;
 using Reforge.Core.Meals.Domain;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Profiles.Domain;
@@ -16,6 +18,7 @@ public class MealsManager(
     IMealRepository mealRepository,
     IProfileRepository profileRepository,
     IWorkoutRepository workoutRepository,
+    IActivityRepository activityRepository,
     IMealAnalysisBackend mealAnalysisBackend,
     IFeatureFlags featureFlags,
     ISubscriptionsUseCase subscriptionsUseCase,
@@ -117,14 +120,19 @@ public class MealsManager(
             dayMeals.Sum(m => m.Fats));
 
         var dayWorkouts = await workoutRepository.GetByUserIdAsync(userId);
-        var targets = CalculateTargets(profile, dayWorkouts.Where(w => DateOnly.FromDateTime(w.Timestamp) == date).ToList());
+        var dayActivities = await activityRepository.GetByUserIdAsync(userId);
+        var targets = CalculateTargets(
+            profile,
+            dayWorkouts.Where(w => DateOnly.FromDateTime(w.Timestamp) == date).ToList(),
+            dayActivities.Where(a => DateOnly.FromDateTime(a.Timestamp) == date).ToList());
 
         return Result.Success(new DailyStatsDto(consumed, targets));
     }
 
-    private static MacroValuesDto CalculateTargets(UserProfile profile, IReadOnlyCollection<Workout> dayWorkouts)
+    private static MacroValuesDto CalculateTargets(
+        UserProfile profile, IReadOnlyCollection<Workout> dayWorkouts, IReadOnlyCollection<Activity> dayActivities)
     {
-        var calorieTarget = CalorieTargetCalculator.Calculate(profile, dayWorkouts);
+        var calorieTarget = CalorieTargetCalculator.Calculate(profile, dayWorkouts, dayActivities);
         var weight = profile.Weight is double w and not 0 ? w : 70;
 
         double proteinPerKg;

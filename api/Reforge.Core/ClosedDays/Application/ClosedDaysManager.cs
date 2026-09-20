@@ -1,3 +1,4 @@
+using Reforge.Core.Activities.OutputPorts;
 using Reforge.Core.ClosedDays.Domain;
 using Reforge.Core.ClosedDays.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
@@ -14,6 +15,7 @@ public class ClosedDaysManager(
     IClosedDayRepository closedDayRepository,
     IMealRepository mealRepository,
     IWorkoutRepository workoutRepository,
+    IActivityRepository activityRepository,
     IProfileRepository profileRepository,
     IClock clock,
     IIdGenerator idGenerator) : IClosedDaysUseCase
@@ -38,9 +40,12 @@ public class ClosedDaysManager(
         var todaysWorkouts = workouts.Where(w => DateOnly.FromDateTime(w.Timestamp) == today).ToList();
         var isTrainingDay = todaysWorkouts.Count > 0;
 
+        var activities = await activityRepository.GetByUserIdAsync(userId);
+        var todaysActivities = activities.Where(a => DateOnly.FromDateTime(a.Timestamp) == today).ToList();
+
         var profile = await profileRepository.GetByUserIdAsync(userId);
         var targetSuffix = profile is not null
-            ? $" (objetivo: {CalorieTargetCalculator.Calculate(profile, todaysWorkouts)} cal)"
+            ? $" (objetivo: {CalorieTargetCalculator.Calculate(profile, todaysWorkouts, todaysActivities)} cal)"
             : "";
 
         // Ports recomp-coach-backend's routes/chat.ts COMANDO_CERRAR_DIA fallback analysis
@@ -81,7 +86,7 @@ public class ClosedDaysManager(
     {
         var userId = currentUserProvider.GetUserId();
         var profile = await profileRepository.GetByUserIdAsync(userId);
-        var targetCalories = profile is not null ? CalorieTargetCalculator.Calculate(profile, []) : 2000;
+        var targetCalories = profile is not null ? CalorieTargetCalculator.Calculate(profile, [], []) : 2000;
 
         var allMeals = await mealRepository.GetByUserIdAsync(userId);
         var closedDays = await closedDayRepository.GetByUserIdAsync(userId);

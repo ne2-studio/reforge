@@ -33,6 +33,7 @@ public class ClosedDaysManagerTests
             closedDayRepository,
             mealRepository,
             workoutRepository,
+            new FakeActivityRepository(),
             profileRepository,
             new FakeClock(today),
             new FakeIdGenerator(Guid.NewGuid()));
@@ -59,6 +60,7 @@ public class ClosedDaysManagerTests
             new FakeClosedDayRepository(),
             mealRepository,
             new FakeWorkoutRepository(),
+            new FakeActivityRepository(),
             new FakeProfileRepository(),
             new FakeClock(today),
             new FakeIdGenerator(Guid.NewGuid()));
@@ -80,6 +82,7 @@ public class ClosedDaysManagerTests
             new FakeClosedDayRepository(),
             new FakeMealRepository(),
             new FakeWorkoutRepository(),
+            new FakeActivityRepository(),
             new FakeProfileRepository(),
             new FakeClock(today),
             new FakeIdGenerator(Guid.NewGuid()));
@@ -107,6 +110,7 @@ public class ClosedDaysManagerTests
             closedDayRepository,
             mealRepository,
             new FakeWorkoutRepository(),
+            new FakeActivityRepository(),
             new FakeProfileRepository(),
             new FakeClock(today),
             new FakeIdGenerator(Guid.NewGuid()));
@@ -134,6 +138,7 @@ public class ClosedDaysManagerTests
             closedDayRepository,
             new FakeMealRepository(),
             new FakeWorkoutRepository(),
+            new FakeActivityRepository(),
             new FakeProfileRepository(),
             new FakeClock(DateTime.UtcNow),
             new FakeIdGenerator(Guid.NewGuid()));
@@ -176,6 +181,7 @@ public class ClosedDaysManagerTests
             closedDayRepository,
             mealRepository,
             new FakeWorkoutRepository(),
+            new FakeActivityRepository(),
             profileRepository,
             new FakeClock(today),
             new FakeIdGenerator(Guid.NewGuid()));
@@ -221,6 +227,7 @@ public class ClosedDaysManagerTests
             closedDayRepository,
             mealRepository,
             new FakeWorkoutRepository(),
+            new FakeActivityRepository(),
             profileRepository,
             new FakeClock(today),
             new FakeIdGenerator(Guid.NewGuid()));

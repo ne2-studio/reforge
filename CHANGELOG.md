@@ -48,5 +48,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   lugar de mostrar siempre 2000 kcal cuando no tienes un objetivo personalizado guardado.
 - El objetivo "perder grasa" aplicaba un déficit fijo de 500 kcal, demasiado agresivo para
   quien tiene un gasto calórico bajo; ahora el déficit es del 15% sobre tu gasto calórico
-  total. Además, los entrenos registrados hoy suman kcal a tu objetivo (cardio, según su
-  duración; fuerza, una cantidad fija por sesión).
+  total. Además, los entrenos y actividades registrados hoy suman kcal a tu objetivo (cardio y
+  NEAT, según duración/pasos; fuerza, una cantidad fija por sesión).

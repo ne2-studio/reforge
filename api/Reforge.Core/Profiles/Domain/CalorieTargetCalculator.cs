@@ -1,3 +1,4 @@
+using Reforge.Core.Activities.Domain;
 using Reforge.Core.Workouts.Domain;
 
 namespace Reforge.Core.Profiles.Domain;
@@ -5,21 +6,27 @@ namespace Reforge.Core.Profiles.Domain;
 // Mifflin-St Jeor BMR × activity multiplier ± goal adjustment ± today's training bonus. Used
 // wherever a profile's CalorieTarget is unset — falls back to a flat default only when there
 // isn't enough profile data (age/gender/height/weight) to compute a real estimate. A profile
-// with an explicit CalorieTarget always wins as-is, todaysWorkouts included — a value the user
-// typed in isn't ours to adjust.
+// with an explicit CalorieTarget always wins as-is, today's workouts/activities included — a
+// value the user typed in isn't ours to adjust.
 public static class CalorieTargetCalculator
 {
     private const int DefaultCalorieTarget = 2000;
     private const int MinimumCalorieTarget = 1200;
     private const double LoseFatDeficitShare = 0.15;
 
-    // Same per-minute cardio rate as the frontend's activities/calorieEstimate.ts. Strength
-    // workouts don't carry a duration (only total volume, see Workout.cs), so they get a flat
-    // per-session estimate instead of a rate.
+    // Same per-minute/per-step rates as the frontend's activities/calorieEstimate.ts (which
+    // covers Activity's strength/cardio/neat, all duration- or steps-based). Workout's strength
+    // type is the odd one out — it doesn't carry a duration (only total volume, see
+    // Workout.cs) — so it gets a flat per-session estimate instead of a rate.
     private const double CardioCaloriesPerMinute = 8;
+    private const double StrengthActivityCaloriesPerMinute = 6;
+    private const double NeatCaloriesPerStep = 0.04;
     private const int StrengthWorkoutCalorieBonus = 200;
 
-    public static int Calculate(UserProfile profile, IReadOnlyCollection<Workout> todaysWorkouts)
+    public static int Calculate(
+        UserProfile profile,
+        IReadOnlyCollection<Workout> todaysWorkouts,
+        IReadOnlyCollection<Activity> todaysActivities)
     {
         if (profile.CalorieTarget is int ct and not 0)
             return ct;
@@ -59,14 +66,22 @@ public static class CalorieTargetCalculator
             _ => 0, // maintain or unset
         };
 
-        var trainingBonus = todaysWorkouts.Sum(workout => workout.Type switch
+        var workoutBonus = todaysWorkouts.Sum(workout => workout.Type switch
         {
             "cardio" => (int)Math.Round((workout.Duration ?? 0) * CardioCaloriesPerMinute),
             "strength" => StrengthWorkoutCalorieBonus,
             _ => 0,
         });
 
-        var calorieTarget = (int)Math.Round(tdee) + goalAdjustment + trainingBonus;
+        var activityBonus = todaysActivities.Sum(activity => activity.Type switch
+        {
+            "cardio" => (int)Math.Round((activity.Duration ?? 0) * CardioCaloriesPerMinute),
+            "strength" => (int)Math.Round((activity.Duration ?? 0) * StrengthActivityCaloriesPerMinute),
+            "neat" => (int)Math.Round((activity.Steps ?? 0) * NeatCaloriesPerStep),
+            _ => 0,
+        });
+
+        var calorieTarget = (int)Math.Round(tdee) + goalAdjustment + workoutBonus + activityBonus;
 
         return Math.Max(calorieTarget, MinimumCalorieTarget);
     }

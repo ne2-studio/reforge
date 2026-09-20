@@ -41,6 +41,7 @@ public class ChatManagerTests
             closedDayRepository ?? new FakeClosedDayRepository(),
             mealRepository ?? new FakeMealRepository(),
             new FakeWorkoutRepository(),
+            new FakeActivityRepository(),
             profileRepository ?? new FakeProfileRepository(),
             clock,
             new FakeIdGenerator(Guid.NewGuid()));

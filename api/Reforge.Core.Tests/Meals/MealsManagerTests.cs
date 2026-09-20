@@ -1,4 +1,5 @@
 using Reforge.Domain;
+using Reforge.Core.Activities.Domain;
 using Reforge.Core.Meals;
 using Reforge.Core.Meals.Application;
 using Reforge.Core.Meals.Domain;
@@ -24,6 +25,7 @@ public class MealsManagerTests
         FakeMealRepository? mealRepository = null,
         FakeProfileRepository? profileRepository = null,
         FakeWorkoutRepository? workoutRepository = null,
+        FakeActivityRepository? activityRepository = null,
         FakeMealAnalysisBackend? analysisBackend = null,
         FakeFeatureFlags? featureFlags = null,
         FakeSubscriptionRepository? subscriptionRepository = null,
@@ -45,6 +47,7 @@ public class MealsManagerTests
             mealRepository ?? new FakeMealRepository(),
             profileRepository ?? new FakeProfileRepository(),
             workoutRepository ?? new FakeWorkoutRepository(),
+            activityRepository ?? new FakeActivityRepository(),
             analysisBackend ?? new FakeMealAnalysisBackend(),
             featureFlags ?? new FakeFeatureFlags(),
             subscriptionsManager,
@@ -266,6 +269,31 @@ public class MealsManagerTests
         Assert.True(result.IsSuccess);
         // Base target 1614 + flat 200 kcal strength-session bonus.
         Assert.Equal(1814, result.Value.Targets.Calories);
+    }
+
+    [Fact]
+    public async Task GetDailyStatsAsync_AddsATrainingBonus_ForActivitiesLoggedOnTheRequestedDate_IncludingNeat()
+    {
+        var date = new DateOnly(2026, 3, 4);
+        var profileRepository = new FakeProfileRepository();
+        profileRepository.Seed(new UserProfile(
+            UserId, DateTime.UtcNow,
+            age: 37, gender: "male", height: 178, weight: 65, activityLevel: "sedentary", goal: "lose-fat"));
+
+        var activityRepository = new FakeActivityRepository();
+        activityRepository.Seed(new Activity(
+            Guid.NewGuid(), UserId, "neat", timestamp: date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), steps: 8000));
+        // A different day's activity must not count towards today's bonus.
+        activityRepository.Seed(new Activity(
+            Guid.NewGuid(), UserId, "neat", timestamp: date.AddDays(-1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), steps: 20000));
+
+        var manager = CreateManager(profileRepository: profileRepository, activityRepository: activityRepository, nextId: Guid.NewGuid());
+
+        var result = await manager.GetDailyStatsAsync(date);
+
+        Assert.True(result.IsSuccess);
+        // Base target (see the 15%-deficit test above) is 1614; +8000 steps * 0.04 kcal/step = 320.
+        Assert.Equal(1934, result.Value.Targets.Calories);
     }
 
     [Fact]
