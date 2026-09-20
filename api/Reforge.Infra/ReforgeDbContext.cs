@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Reforge.Core.MealLibrary.Domain;
 using Reforge.Core.Meals.Domain;
 using Reforge.Core.Profiles.Domain;
 using Reforge.Core.Users.Domain;
@@ -10,6 +11,7 @@ public class ReforgeDbContext(DbContextOptions<ReforgeDbContext> options) : DbCo
     public DbSet<User> Users => Set<User>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<Meal> Meals => Set<Meal>();
+    public DbSet<MealLibraryItem> MealLibraryItems => Set<MealLibraryItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

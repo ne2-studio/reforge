@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Profiles.OutputPorts;
 using Reforge.Core.Shared.OutputPorts;
@@ -17,6 +18,7 @@ public static class ServiceRegistration
         services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         services.AddSingleton<IProfileRepository, InMemoryProfileRepository>();
         services.AddSingleton<IMealRepository, InMemoryMealRepository>();
+        services.AddSingleton<IMealLibraryRepository, InMemoryMealLibraryRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();

@@ -7,6 +7,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Reforge.Core.MealLibrary;
+using Reforge.Core.MealLibrary.Application;
 using Reforge.Core.Meals;
 using Reforge.Core.Meals.Application;
 using Reforge.Core.Ping;
@@ -125,6 +127,7 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IPingUseCase, PingManager>();
         builder.Services.AddScoped<IProfileUseCase, ProfileManager>();
         builder.Services.AddScoped<IMealsUseCase, MealsManager>();
+        builder.Services.AddScoped<IMealLibraryUseCase, MealLibraryManager>();
 
         var app = builder.Build();
 
