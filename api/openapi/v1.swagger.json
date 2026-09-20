@@ -90,6 +90,102 @@
         }
       }
     },
+    "/api/close-day": {
+      "post": {
+        "tags": [
+          "ClosedDays"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClosedDayDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClosedDayDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClosedDayDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/day-history": {
+      "get": {
+        "tags": [
+          "ClosedDays"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClosedDayDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClosedDayDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClosedDayDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/weekly-progress": {
+      "get": {
+        "tags": [
+          "ClosedDays"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyProgressDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyProgressDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyProgressDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -892,6 +988,35 @@
         },
         "additionalProperties": false
       },
+      "ClosedDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalCalories": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mealsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isTrainingDay": {
+            "type": "boolean"
+          },
+          "analysis": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CustomReminderDto": {
         "type": "object",
         "properties": {
@@ -1440,6 +1565,75 @@
         },
         "additionalProperties": false
       },
+      "WeeklyDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "targetCalories": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "consumedCalories": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deficit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mealsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isClosed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeeklyProgressDto": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeeklyDayDto"
+            },
+            "nullable": true
+          },
+          "totalDeficit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysInDeficit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysInSurplus": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysWithMeals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "adherenceStreak": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "insights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WorkoutDto": {
         "type": "object",
         "properties": {
@@ -1473,6 +1667,9 @@
   "tags": [
     {
       "name": "Activities"
+    },
+    {
+      "name": "ClosedDays"
     },
     {
       "name": "Health"

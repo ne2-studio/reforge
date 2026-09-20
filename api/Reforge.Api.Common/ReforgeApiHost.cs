@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Reforge.Core.Activities;
 using Reforge.Core.Activities.Application;
+using Reforge.Core.ClosedDays;
+using Reforge.Core.ClosedDays.Application;
 using Reforge.Core.MealLibrary;
 using Reforge.Core.MealLibrary.Application;
 using Reforge.Core.Meals;
@@ -140,6 +142,7 @@ public static class ReforgeApiHost
         builder.Services.AddScoped<IWorkoutsUseCase, WorkoutsManager>();
         builder.Services.AddScoped<IMeasurementsUseCase, MeasurementsManager>();
         builder.Services.AddScoped<IRemindersUseCase, RemindersManager>();
+        builder.Services.AddScoped<IClosedDaysUseCase, ClosedDaysManager>();
 
         var app = builder.Build();
 

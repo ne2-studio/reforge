@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reforge.Core.Activities.OutputPorts;
+using Reforge.Core.ClosedDays.OutputPorts;
 using Reforge.Core.MealLibrary.OutputPorts;
 using Reforge.Core.Meals.OutputPorts;
 using Reforge.Core.Measurements.OutputPorts;
@@ -28,6 +29,7 @@ public static class ServiceRegistration
         services.AddSingleton<IMeasurementRepository, InMemoryMeasurementRepository>();
         services.AddSingleton<IReminderSettingsRepository, InMemoryReminderSettingsRepository>();
         services.AddSingleton<ICustomReminderRepository, InMemoryCustomReminderRepository>();
+        services.AddSingleton<IClosedDayRepository, InMemoryClosedDayRepository>();
 
         services.AddScoped<IClock, SystemClock>();
         services.AddScoped<IIdGenerator, SystemGuidIdGenerator>();

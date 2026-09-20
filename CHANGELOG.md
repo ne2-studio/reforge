@@ -24,3 +24,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   available.
 - Recordatorios: activa avisos generales (canal y hora por defecto) y crea tus propios
   recordatorios personalizados (mensaje, hora y días de la semana) desde la pantalla de perfil.
+- Cierre del día: cierra tu día manualmente y consulta su resumen (comidas registradas, calorías
+  totales y si fue día de entrenamiento) en tu historial, más tu progreso semanal de déficit y
+  superávit calórico con la racha de días en déficit.
