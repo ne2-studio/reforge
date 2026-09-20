@@ -272,6 +272,35 @@
         }
       }
     },
+    "/api/features": {
+      "get": {
+        "tags": [
+          "Features"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturesResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturesResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -1235,6 +1264,15 @@
         },
         "additionalProperties": false
       },
+      "FeaturesResponse": {
+        "type": "object",
+        "properties": {
+          "subscriptions": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -1867,6 +1905,9 @@
     },
     {
       "name": "ClosedDays"
+    },
+    {
+      "name": "Features"
     },
     {
       "name": "Health"
