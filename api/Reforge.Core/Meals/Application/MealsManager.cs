@@ -118,13 +118,9 @@ public class MealsManager(
         return Result.Success(new DailyStatsDto(consumed, targets));
     }
 
-    // Ports recomp-coach-backend's routes/meals.ts daily-stats/:date macro-target formula
-    // verbatim, including its `Number(x) || default` fallback semantics (0 is treated the same
-    // as null/unset, matching JS's falsy-value behavior) — this is real domain logic carried
-    // over from the source backend, not incidental.
     private static MacroValuesDto CalculateTargets(UserProfile profile)
     {
-        var calorieTarget = profile.CalorieTarget is int ct and not 0 ? ct : 2000;
+        var calorieTarget = CalorieTargetCalculator.Calculate(profile);
         var weight = profile.Weight is double w and not 0 ? w : 70;
 
         double proteinPerKg;

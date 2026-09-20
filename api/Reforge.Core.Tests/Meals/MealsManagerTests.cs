@@ -180,6 +180,45 @@ public class MealsManagerTests
     }
 
     [Fact]
+    public async Task GetDailyStatsAsync_WhenCalorieTargetIsUnset_ComputesItFromTheMifflinStJeorFormula()
+    {
+        var profileRepository = new FakeProfileRepository();
+        profileRepository.Seed(new UserProfile(
+            UserId, DateTime.UtcNow,
+            age: 30, gender: "male", height: 180, weight: 80, activityLevel: "moderate", goal: "maintain"));
+
+        var manager = CreateManager(profileRepository: profileRepository, nextId: Guid.NewGuid());
+
+        var result = await manager.GetDailyStatsAsync(new DateOnly(2026, 3, 4));
+
+        Assert.True(result.IsSuccess);
+        // BMR = 10*80 + 6.25*180 - 5*30 + 5 = 1780; TDEE = 1780 * 1.55 (moderate) = 2759; no
+        // goal adjustment for "maintain".
+        Assert.Equal(2759, result.Value.Targets.Calories);
+        Assert.Equal(144, result.Value.Targets.Protein);
+        Assert.Equal(339, result.Value.Targets.Carbs);
+        Assert.Equal(92, result.Value.Targets.Fats);
+    }
+
+    [Fact]
+    public async Task GetDailyStatsAsync_WhenTheComputedCalorieTargetWouldBeUnsafelyLow_ClampsToTheMinimum()
+    {
+        var profileRepository = new FakeProfileRepository();
+        profileRepository.Seed(new UserProfile(
+            UserId, DateTime.UtcNow,
+            age: 25, gender: "female", height: 165, weight: 60, activityLevel: "sedentary", goal: "lose-fat"));
+
+        var manager = CreateManager(profileRepository: profileRepository, nextId: Guid.NewGuid());
+
+        var result = await manager.GetDailyStatsAsync(new DateOnly(2026, 3, 4));
+
+        Assert.True(result.IsSuccess);
+        // BMR = 10*60 + 6.25*165 - 5*25 - 161 = 1345.25; TDEE = 1345.25 * 1.2 (sedentary) ≈
+        // 1614; minus the 500 kcal "lose-fat" deficit = 1114, below the 1200 kcal floor.
+        Assert.Equal(1200, result.Value.Targets.Calories);
+    }
+
+    [Fact]
     public async Task AnalyzeAndSaveMealAsync_AnalyzesViaTheBackend_AndSavesTheResultingMeal()
     {
         var mealRepository = new FakeMealRepository();

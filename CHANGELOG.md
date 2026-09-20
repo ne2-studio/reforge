@@ -40,3 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Nueva cabecera con el logo de Reforge y un menú de usuario (acceso a Perfil, Historial de
   comidas, Mi suscripción y Cerrar sesión) visible en toda la app.
 - Nuevo tema visual con tonos naranja/ámbar en lugar de lima/cian.
+
+### Fixed
+
+- Tu objetivo diario de calorías ahora se calcula a partir de tu edad, sexo, altura, peso,
+  nivel de actividad y objetivo (perder grasa, ganar músculo, recomposición o mantener), en
+  lugar de mostrar siempre 2000 kcal cuando no tienes un objetivo personalizado guardado.

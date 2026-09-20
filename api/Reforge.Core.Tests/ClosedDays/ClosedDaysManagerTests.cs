@@ -204,6 +204,35 @@ public class ClosedDaysManagerTests
         Assert.NotEmpty(progress.Insights);
     }
 
+    [Fact]
+    public async Task GetWeeklyProgressAsync_WhenCalorieTargetIsUnset_ComputesItFromTheMifflinStJeorFormula()
+    {
+        var mealRepository = new FakeMealRepository();
+        var profileRepository = new FakeProfileRepository();
+        var closedDayRepository = new FakeClosedDayRepository();
+        var today = new DateTime(2026, 3, 10, 9, 0, 0, DateTimeKind.Utc);
+
+        profileRepository.Seed(new UserProfile(
+            UserId, updatedAt: today,
+            age: 30, gender: "male", height: 180, weight: 80, activityLevel: "moderate", goal: "maintain"));
+
+        var manager = new ClosedDaysManager(
+            new FakeCurrentUserProvider(UserId),
+            closedDayRepository,
+            mealRepository,
+            new FakeWorkoutRepository(),
+            profileRepository,
+            new FakeClock(today),
+            new FakeIdGenerator(Guid.NewGuid()));
+
+        var result = await manager.GetWeeklyProgressAsync();
+
+        Assert.True(result.IsSuccess);
+        // BMR = 10*80 + 6.25*180 - 5*30 + 5 = 1780; TDEE = 1780 * 1.55 (moderate) = 2759; no
+        // goal adjustment for "maintain" — same formula as MealsManager.CalculateTargets.
+        Assert.All(result.Value.Days, day => Assert.Equal(2759, day.TargetCalories));
+    }
+
     private static Meal NewMeal(int calories, DateOnly date) => new(
         Guid.NewGuid(),
         UserId,
