@@ -4,9 +4,11 @@ import { useAuth } from 'react-oidc-context';
 
 import { setAccessToken } from '@/api';
 import { ProtectedRoute, PublicRoute } from './routes/AuthGuards';
+import { AppLayout } from './components/AppLayout';
 import { WelcomeRoute } from '@/features/auth/routes/WelcomeRoute';
 import { CallbackRoute } from '@/features/auth/routes/CallbackRoute';
 import { PingRoute } from '@/features/ping/routes/PingRoute';
+import { HomeRoute } from '@/features/home/routes/HomeRoute';
 import { ProfileRoute } from '@/features/profile/routes/ProfileRoute';
 import { MealsRoute } from '@/features/meals/routes/MealsRoute';
 import { MealLibraryRoute } from '@/features/mealLibrary/routes/MealLibraryRoute';
@@ -68,93 +70,31 @@ function App() {
         }
       />
       <Route
-        path="/perfil"
         element={
           <ProtectedRoute>
-            <ProfileRoute />
+            <AppLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/comidas"
-        element={
-          <ProtectedRoute>
-            <MealsRoute />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/biblioteca-comidas"
-        element={
-          <ProtectedRoute>
-            <MealLibraryRoute />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/actividad"
-        element={
-          <ProtectedRoute>
-            <ActivityRoute />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/entrenamientos"
-        element={
-          <ProtectedRoute>
-            <WorkoutRoute />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/progreso"
-        element={
-          <ProtectedRoute>
-            <ProgressRoute />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/historial"
-        element={
-          <ProtectedRoute>
-            <HistoryRoute />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <ChatRoute />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/suscripcion"
-        element={
-          <ProtectedRoute>
-            {subscriptionsEnabled ? <SubscriptionRoute /> : <Navigate to="/" replace />}
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/suscripcion/checkout"
-        element={
-          <ProtectedRoute>
-            {subscriptionsEnabled ? <CheckoutRoute /> : <Navigate to="/" replace />}
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/suscripcion/portal"
-        element={
-          <ProtectedRoute>
-            {subscriptionsEnabled ? <PortalRoute /> : <Navigate to="/" replace />}
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route path="/home" element={<HomeRoute />} />
+        <Route path="/perfil" element={<ProfileRoute />} />
+        <Route path="/comidas" element={<MealsRoute />} />
+        <Route path="/biblioteca-comidas" element={<MealLibraryRoute />} />
+        <Route path="/actividad" element={<ActivityRoute />} />
+        <Route path="/entrenamientos" element={<WorkoutRoute />} />
+        <Route path="/progreso" element={<ProgressRoute />} />
+        <Route path="/historial" element={<HistoryRoute />} />
+        <Route path="/chat" element={<ChatRoute />} />
+        <Route path="/suscripcion" element={subscriptionsEnabled ? <SubscriptionRoute /> : <Navigate to="/" replace />} />
+        <Route
+          path="/suscripcion/checkout"
+          element={subscriptionsEnabled ? <CheckoutRoute /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/suscripcion/portal"
+          element={subscriptionsEnabled ? <PortalRoute /> : <Navigate to="/" replace />}
+        />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

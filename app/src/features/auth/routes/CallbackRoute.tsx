@@ -12,7 +12,7 @@ export function CallbackRoute() {
 
   useEffect(() => {
     if (auth.isAuthenticated) {
-      navigate('/ping', { replace: true });
+      navigate('/home', { replace: true });
       return;
     }
 

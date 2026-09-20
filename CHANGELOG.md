@@ -32,3 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Suscripción Premium: consulta tu plan y tu uso de funciones de IA desde el perfil, mejora tu
   plan o gestiona tu facturación, y recibe un aviso cuando alcances el límite de uso gratuito del
   coach de IA.
+
+### Changed
+
+- Tras iniciar sesión llegas a una pantalla de inicio con la barra de navegación (Inicio,
+  Comidas, Actividad, Coach, Progreso) para moverte entre las secciones de la app.

@@ -30,7 +30,7 @@ export const PublicRoute: React.FC<GuardProps> = ({ children }) => {
   if (auth.isLoading) return <div className="min-h-screen flex items-center justify-center">Cargando…</div>;
 
   if (auth.isAuthenticated) {
-    return <Navigate to="/ping" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;
