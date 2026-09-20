@@ -5,7 +5,15 @@ import { Label } from '@/design-system/components/ui/label';
 import { Textarea } from '@/design-system/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/design-system/components/ui/card';
 import { User, Save, Loader2, Dumbbell } from 'lucide-react';
-import type { SaveProfileData, UserProfile } from '@/types';
+import { ReminderSettingsCard } from './ReminderSettingsCard';
+import type {
+  CustomReminder,
+  ReminderSettings,
+  SaveCustomReminderData,
+  SaveProfileData,
+  SaveReminderSettingsData,
+  UserProfile,
+} from '@/types';
 
 const DAYS_OF_WEEK = [
   { key: 'monday', label: 'L', fullLabel: 'Lunes' },
@@ -66,6 +74,14 @@ interface ProfileEditorProps {
   profile: UserProfile;
   isSaving: boolean;
   onSave: (data: SaveProfileData) => void;
+  reminderSettings: ReminderSettings | null;
+  customReminders: CustomReminder[];
+  isLoadingReminders: boolean;
+  isSavingReminderSettings: boolean;
+  onSaveReminderSettings: (data: SaveReminderSettingsData) => void;
+  onCreateReminder: (data: SaveCustomReminderData) => void;
+  onUpdateReminder: (id: string, data: SaveCustomReminderData) => void;
+  onDeleteReminder: (id: string) => void;
 }
 
 // Presentational — no react-router-dom/store/useCases imports. Read/edit view for an
@@ -73,7 +89,24 @@ interface ProfileEditorProps {
 // waist/neck/goalBodyFat/caloricPreference dropped (see OnboardingWizard's comment) and the
 // <DayHistory /> tab dropped entirely: that's Slice 7 (Day close), not built yet, and the
 // legacy component's Tabs/DayHistory imports were unused dead wiring anyway.
-export function ProfileEditor({ profile, isSaving, onSave }: ProfileEditorProps) {
+//
+// Slice 6 (docs/plan/02-vertical-slices.md) adds a Recordatorios section below the profile
+// card via <ReminderSettingsCard/> — there's no standalone reminders route, so it lives here,
+// with reminders' own props forwarded straight through from ProfileRoute (the store/useCases
+// wiring belongs there, not in this presentational component).
+export function ProfileEditor({
+  profile,
+  isSaving,
+  onSave,
+  reminderSettings,
+  customReminders,
+  isLoadingReminders,
+  isSavingReminderSettings,
+  onSaveReminderSettings,
+  onCreateReminder,
+  onUpdateReminder,
+  onDeleteReminder,
+}: ProfileEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [edited, setEdited] = useState<EditableFields>(() => toEditableFields(profile));
 
@@ -99,207 +132,226 @@ export function ProfileEditor({ profile, isSaving, onSave }: ProfileEditorProps)
     setIsEditing(false);
   };
 
+  const reminders = (
+    <ReminderSettingsCard
+      settings={reminderSettings}
+      customReminders={customReminders}
+      isLoading={isLoadingReminders}
+      isSavingSettings={isSavingReminderSettings}
+      onSaveSettings={onSaveReminderSettings}
+      onCreateReminder={onCreateReminder}
+      onUpdateReminder={onUpdateReminder}
+      onDeleteReminder={onDeleteReminder}
+    />
+  );
+
   if (!isEditing) {
     return (
-      <Card className="border-2 border-primary/20">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      <div className="space-y-6">
+        <Card className="border-2 border-primary/20">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Tu perfil
+                </CardTitle>
+                <CardDescription>Información personal y objetivos</CardDescription>
+              </div>
+              <Button
+                onClick={() => {
+                  setEdited(toEditableFields(profile));
+                  setIsEditing(true);
+                }}
+                variant="outline"
+              >
+                Editar
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                Tu perfil
-              </CardTitle>
-              <CardDescription>Información personal y objetivos</CardDescription>
-            </div>
-            <Button
-              onClick={() => {
-                setEdited(toEditableFields(profile));
-                setIsEditing(true);
-              }}
-              variant="outline"
-            >
-              Editar
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <h4 className="text-primary mb-3">Datos básicos</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted/30 rounded-lg p-3">
-                <div className="text-xs text-muted-foreground mb-1">Edad</div>
-                <div>{profile.age != null ? `${profile.age} años` : 'No configurado'}</div>
-              </div>
-              <div className="bg-muted/30 rounded-lg p-3">
-                <div className="text-xs text-muted-foreground mb-1">Sexo</div>
-                <div>{profile.gender === 'male' ? 'Hombre' : profile.gender === 'female' ? 'Mujer' : 'No configurado'}</div>
-              </div>
-              <div className="bg-muted/30 rounded-lg p-3">
-                <div className="text-xs text-muted-foreground mb-1">Peso</div>
-                <div>{profile.weight != null ? `${profile.weight} kg` : 'No configurado'}</div>
-              </div>
-              <div className="bg-muted/30 rounded-lg p-3">
-                <div className="text-xs text-muted-foreground mb-1">Altura</div>
-                <div>{profile.height != null ? `${profile.height} cm` : 'No configurado'}</div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-primary mb-3">Objetivos</h4>
-            <div className="bg-muted/30 rounded-lg p-3">
-              <div className="text-xs text-muted-foreground mb-1">Meta principal</div>
-              <div>{profile.goal ? (GOAL_LABELS[profile.goal] ?? profile.goal) : 'No configurado'}</div>
-            </div>
-          </div>
-
-          {profile.restrictions && (
-            <div>
-              <h4 className="text-primary mb-3">Restricciones alimentarias</h4>
-              <div className="bg-muted/30 rounded-lg p-3">
-                <p className="text-sm">{profile.restrictions}</p>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <h4 className="text-primary mb-3 flex items-center gap-2">
-              <Dumbbell className="h-4 w-4" />
-              Días de entrenamiento
-            </h4>
-            <div className="bg-muted/30 rounded-lg p-3">
-              {profile.trainingDays.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {DAYS_OF_WEEK.map(
-                    (day) =>
-                      profile.trainingDays.includes(day.key) && (
-                        <span key={day.key} className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm">
-                          {day.fullLabel}
-                        </span>
-                      )
-                  )}
+              <h4 className="text-primary mb-3">Datos básicos</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Edad</div>
+                  <div>{profile.age != null ? `${profile.age} años` : 'No configurado'}</div>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No configurado</p>
-              )}
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Sexo</div>
+                  <div>{profile.gender === 'male' ? 'Hombre' : profile.gender === 'female' ? 'Mujer' : 'No configurado'}</div>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Peso</div>
+                  <div>{profile.weight != null ? `${profile.weight} kg` : 'No configurado'}</div>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Altura</div>
+                  <div>{profile.height != null ? `${profile.height} cm` : 'No configurado'}</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            <div>
+              <h4 className="text-primary mb-3">Objetivos</h4>
+              <div className="bg-muted/30 rounded-lg p-3">
+                <div className="text-xs text-muted-foreground mb-1">Meta principal</div>
+                <div>{profile.goal ? (GOAL_LABELS[profile.goal] ?? profile.goal) : 'No configurado'}</div>
+              </div>
+            </div>
+
+            {profile.restrictions && (
+              <div>
+                <h4 className="text-primary mb-3">Restricciones alimentarias</h4>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <p className="text-sm">{profile.restrictions}</p>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h4 className="text-primary mb-3 flex items-center gap-2">
+                <Dumbbell className="h-4 w-4" />
+                Días de entrenamiento
+              </h4>
+              <div className="bg-muted/30 rounded-lg p-3">
+                {profile.trainingDays.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map(
+                      (day) =>
+                        profile.trainingDays.includes(day.key) && (
+                          <span key={day.key} className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm">
+                            {day.fullLabel}
+                          </span>
+                        )
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No configurado</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {reminders}
+      </div>
     );
   }
 
   return (
-    <Card className="border-2 border-primary/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5 text-primary" />
-          Editar perfil
-        </CardTitle>
-        <CardDescription>Actualiza tu información personal</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <h4 className="text-primary">Datos básicos</h4>
-          <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
+            Editar perfil
+          </CardTitle>
+          <CardDescription>Actualiza tu información personal</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h4 className="text-primary">Datos básicos</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-age">Edad</Label>
+                <Input
+                  id="edit-age"
+                  type="number"
+                  value={edited.age}
+                  onChange={(e) => updateField('age', e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-weight">Peso (kg)</Label>
+                <Input
+                  id="edit-weight"
+                  type="number"
+                  step="0.1"
+                  value={edited.weight}
+                  onChange={(e) => updateField('weight', e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="edit-height">Altura (cm)</Label>
+                <Input
+                  id="edit-height"
+                  type="number"
+                  value={edited.height}
+                  onChange={(e) => updateField('height', e.target.value)}
+                  className="h-12"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-primary">Restricciones alimentarias</h4>
             <div className="space-y-2">
-              <Label htmlFor="edit-age">Edad</Label>
-              <Input
-                id="edit-age"
-                type="number"
-                value={edited.age}
-                onChange={(e) => updateField('age', e.target.value)}
-                className="h-12"
+              <Label htmlFor="edit-restrictions">Alergias, intolerancias o preferencias</Label>
+              <Textarea
+                id="edit-restrictions"
+                value={edited.restrictions}
+                onChange={(e) => updateField('restrictions', e.target.value)}
+                rows={4}
+                className="resize-none"
+                placeholder='Ej: "Sin lactosa, no me gusta el aguacate"'
               />
             </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-primary flex items-center gap-2">
+              <Dumbbell className="h-4 w-4" />
+              Días de entrenamiento
+            </h4>
             <div className="space-y-2">
-              <Label htmlFor="edit-weight">Peso (kg)</Label>
-              <Input
-                id="edit-weight"
-                type="number"
-                step="0.1"
-                value={edited.weight}
-                onChange={(e) => updateField('weight', e.target.value)}
-                className="h-12"
-              />
-            </div>
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="edit-height">Altura (cm)</Label>
-              <Input
-                id="edit-height"
-                type="number"
-                value={edited.height}
-                onChange={(e) => updateField('height', e.target.value)}
-                className="h-12"
-              />
+              <Label>Selecciona los días que sueles entrenar</Label>
+              <div className="grid grid-cols-7 gap-2">
+                {DAYS_OF_WEEK.map((day) => {
+                  const isSelected = edited.trainingDays.includes(day.key);
+                  return (
+                    <Button
+                      key={day.key}
+                      type="button"
+                      variant={isSelected ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => toggleTrainingDay(day.key)}
+                      className="h-12"
+                    >
+                      {day.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                El sistema usará esta configuración para generar menús automáticamente
+              </p>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <h4 className="text-primary">Restricciones alimentarias</h4>
-          <div className="space-y-2">
-            <Label htmlFor="edit-restrictions">Alergias, intolerancias o preferencias</Label>
-            <Textarea
-              id="edit-restrictions"
-              value={edited.restrictions}
-              onChange={(e) => updateField('restrictions', e.target.value)}
-              rows={4}
-              className="resize-none"
-              placeholder='Ej: "Sin lactosa, no me gusta el aguacate"'
-            />
+          <div className="flex gap-3">
+            <Button onClick={handleCancel} variant="outline" className="flex-1 h-12">
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving} className="flex-1 h-12">
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-5 w-5" />
+                  Guardar
+                </>
+              )}
+            </Button>
           </div>
-        </div>
-
-        <div className="space-y-4">
-          <h4 className="text-primary flex items-center gap-2">
-            <Dumbbell className="h-4 w-4" />
-            Días de entrenamiento
-          </h4>
-          <div className="space-y-2">
-            <Label>Selecciona los días que sueles entrenar</Label>
-            <div className="grid grid-cols-7 gap-2">
-              {DAYS_OF_WEEK.map((day) => {
-                const isSelected = edited.trainingDays.includes(day.key);
-                return (
-                  <Button
-                    key={day.key}
-                    type="button"
-                    variant={isSelected ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => toggleTrainingDay(day.key)}
-                    className="h-12"
-                  >
-                    {day.label}
-                  </Button>
-                );
-              })}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              El sistema usará esta configuración para generar menús automáticamente
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button onClick={handleCancel} variant="outline" className="flex-1 h-12">
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="flex-1 h-12">
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Guardando...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-5 w-5" />
-                Guardar
-              </>
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      {reminders}
+    </div>
   );
 }

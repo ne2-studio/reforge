@@ -7,6 +7,7 @@ import { mealLibraryApi } from './api/resources/mealLibrary';
 import { activitiesApi } from './api/resources/activities';
 import { workoutsApi } from './api/resources/workouts';
 import { measurementsApi } from './api/resources/measurements';
+import { remindersApi } from './api/resources/reminders';
 
 // Single fetch client for the backend, namespaced per resource — see
 // docs/architecture/frontend.md.
@@ -18,4 +19,5 @@ export const api = {
   activities: activitiesApi,
   workouts: workoutsApi,
   measurements: measurementsApi,
+  reminders: remindersApi,
 };

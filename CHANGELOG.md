@@ -22,3 +22,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Progress tracking: log weight/waist/neck measurements and see stat cards and trend charts,
   including a body-fat % and lean-mass estimate computed from your profile once enough data is
   available.
+- Recordatorios: activa avisos generales (canal y hora por defecto) y crea tus propios
+  recordatorios personalizados (mensaje, hora y días de la semana) desde la pantalla de perfil.
