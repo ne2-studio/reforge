@@ -16,6 +16,8 @@ unless explicitly marked `[AllowAnonymous]`.
 Anonymous exceptions (walking skeleton):
 
 - `GET /health` — liveness check.
+- `GET /api/features` — global feature toggles (currently just `subscriptions`), so the frontend
+  can decide whether to show subscription/usage-limit UI at all.
 
 This list will grow as future slices add public surface (e.g. app configuration endpoints);
 keep it accurate rather than describing anonymous routes that don't exist yet.
