@@ -127,7 +127,7 @@ public class SubscriptionsManagerTests
     }
 
     [Fact]
-    public async Task GetSubscriptionAsync_ForAUserWhoNeverSubscribed_ReturnsFreeInactiveWithZeroUsage()
+    public async Task GetSubscriptionAsync_ForAUserWhoNeverSubscribed_ReturnsFreeNoneWithZeroUsage()
     {
         var manager = CreateManager();
 
@@ -135,12 +135,12 @@ public class SubscriptionsManagerTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(SubscriptionTiers.Free, result.Value.Tier);
-        Assert.Equal(SubscriptionStatuses.Inactive, result.Value.Status);
+        Assert.Equal(SubscriptionStatuses.None, result.Value.Status);
         Assert.Null(result.Value.CurrentPeriodEnd);
-        Assert.Equal(0, result.Value.MealAnalysisUsage.Used);
-        Assert.Equal(10, result.Value.MealAnalysisUsage.Limit);
-        Assert.Equal(0, result.Value.ChatUsage.Used);
-        Assert.Equal(10, result.Value.ChatUsage.Limit);
+        Assert.Equal(0, result.Value.Usage.MealAnalysis.Count);
+        Assert.Equal(10, result.Value.Usage.MealAnalysis.Limit);
+        Assert.Equal(0, result.Value.Usage.ChatMessages.Count);
+        Assert.Equal(10, result.Value.Usage.ChatMessages.Limit);
     }
 
     [Fact]

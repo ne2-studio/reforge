@@ -126,8 +126,9 @@ public class SubscriptionsManager(
             subscription.Tier,
             subscription.Status,
             subscription.CurrentPeriodEnd,
-            new UsageDto(mealAnalysisUsed, FreeTierMonthlyLimit),
-            new UsageDto(chatUsed, FreeTierMonthlyLimit));
+            new UsageBreakdownDto(
+                new UsageDto(mealAnalysisUsed, FreeTierMonthlyLimit),
+                new UsageDto(chatUsed, FreeTierMonthlyLimit)));
     }
 
     private DateOnly CurrentMonth()

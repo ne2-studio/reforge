@@ -70,23 +70,26 @@ public record BillingPortalResponseDto(string PortalUrl);
 /// from — field names are deliberately explicit and self-describing.
 /// </summary>
 /// <param name="Tier">"Free" or "Premium" (see SubscriptionTiers).</param>
-/// <param name="Status">"Inactive" (never subscribed), "Active" (currently paying, within a
+/// <param name="Status">"None" (never subscribed), "Active" (currently paying, within a
 /// billing period) or "Canceled" (was Active, has since reverted to Free) — see
 /// SubscriptionStatuses.</param>
 /// <param name="CurrentPeriodEnd">UTC end of the current paid billing period. Null unless Status
 /// is "Active".</param>
-/// <param name="MealAnalysisUsage">This calendar month's AI meal-analysis usage vs. the Free-tier
-/// monthly limit.</param>
-/// <param name="ChatUsage">This calendar month's coach-chat usage vs. the Free-tier monthly
-/// limit.</param>
+/// <param name="Usage">This calendar month's usage vs. the Free-tier monthly limits, for both
+/// limited actions.</param>
 public record SubscriptionSummaryDto(
     string Tier,
     string Status,
     DateTime? CurrentPeriodEnd,
-    UsageDto MealAnalysisUsage,
-    UsageDto ChatUsage);
+    UsageBreakdownDto Usage);
 
-/// <param name="Used">Calls made so far this calendar month, for this one action.</param>
+/// <param name="MealAnalysis">This calendar month's AI meal-analysis usage vs. the Free-tier
+/// monthly limit.</param>
+/// <param name="ChatMessages">This calendar month's coach-chat usage vs. the Free-tier monthly
+/// limit.</param>
+public record UsageBreakdownDto(UsageDto MealAnalysis, UsageDto ChatMessages);
+
+/// <param name="Count">Calls made so far this calendar month, for this one action.</param>
 /// <param name="Limit">The Free-tier monthly allotment for this action (10). Purely informational
 /// for a Premium-tier caller — they are never blocked by it.</param>
-public record UsageDto(int Used, int Limit);
+public record UsageDto(int Count, int Limit);

@@ -25,11 +25,11 @@ public sealed class Subscription
         UpdatedAt = updatedAt;
     }
 
-    /// <summary>The implicit state of a user who has never checked out — Free tier, Inactive
+    /// <summary>The implicit state of a user who has never checked out — Free tier, None
     /// status, no current period. Never persisted as such; only ever constructed in memory when
     /// ISubscriptionRepository.GetByUserIdAsync returns null.</summary>
     public static Subscription CreateDefault(UserId userId, DateTime now) =>
-        new(userId, SubscriptionTiers.Free, SubscriptionStatuses.Inactive, currentPeriodEnd: null, updatedAt: now);
+        new(userId, SubscriptionTiers.Free, SubscriptionStatuses.None, currentPeriodEnd: null, updatedAt: now);
 }
 
 public static class SubscriptionTiers
@@ -38,9 +38,12 @@ public static class SubscriptionTiers
     public const string Premium = "Premium";
 }
 
+// Values match the ticket's fixed HTTP contract (see app/src/types/index.ts's
+// SubscriptionStatus) — "None" rather than "Inactive", so the wire value is exactly what the
+// frontend was built against.
 public static class SubscriptionStatuses
 {
-    public const string Inactive = "Inactive";
+    public const string None = "None";
     public const string Active = "Active";
     public const string Canceled = "Canceled";
 }

@@ -75,7 +75,7 @@ public class SubscriptionsFeatureTests
         Assert.Equal(HttpStatusCode.OK, initialSubscription.StatusCode);
         using var initialJson = JsonDocument.Parse(await initialSubscription.Content.ReadAsStringAsync());
         Assert.Equal("Free", initialJson.RootElement.GetProperty("tier").GetString());
-        Assert.Equal("Inactive", initialJson.RootElement.GetProperty("status").GetString());
+        Assert.Equal("None", initialJson.RootElement.GetProperty("status").GetString());
 
         var checkoutResponse = await client.PostAsync("/api/subscription/checkout", content: null);
         Assert.Equal(HttpStatusCode.OK, checkoutResponse.StatusCode);
