@@ -80,7 +80,7 @@ export function Header() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/historial')} className="cursor-pointer">
               <History className="mr-2 h-4 w-4" />
-              <span>Historial de comidas</span>
+              <span>Progreso semanal</span>
             </DropdownMenuItem>
             {subscriptionsEnabled && (
               <>

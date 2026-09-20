@@ -24,8 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   available.
 - Recordatorios: activa avisos generales (canal y hora por defecto) y crea tus propios
   recordatorios personalizados (mensaje, hora y días de la semana) desde la pantalla de perfil.
-- Historial: consulta tus comidas agrupadas por día y tu progreso semanal de déficit y superávit
-  calórico con la racha de días en déficit.
+- Historial: consulta tu progreso semanal de déficit y superávit calórico con la racha de días
+  en déficit.
 - Coach de IA: chatea con tu coach personal desde un botón flotante en Comidas, y registra una
   comida describiéndola en texto libre para que la IA calcule sus macros y la guarde por ti.
 - Suscripción Premium: consulta tu plan y tu uso de funciones de IA desde el perfil, mejora tu
@@ -42,6 +42,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - El resumen de calorías y macros de hoy ahora se ve en la pantalla de Inicio (antes solo
   estaba en Comidas), junto con las tarjetas de objetivo, racha, comidas de hoy y actividad de
   hoy (antes "Registro de actividad").
+- La pantalla de Comidas ahora muestra tu historial completo de la última semana, agrupado por
+  día, en lugar de solo las comidas de hoy; el formulario para registrar una comida se abre
+  ahora desde un botón "Registrar comida" en una ventana modal, en vez de estar siempre visible
+  en la pantalla.
+- El menú de usuario ahora enlaza a "Progreso semanal" en vez de "Historial de comidas", ya que
+  el historial de comidas se consulta directamente en la pantalla de Comidas.
 
 ### Fixed
 

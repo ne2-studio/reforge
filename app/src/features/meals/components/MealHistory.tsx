@@ -56,8 +56,8 @@ function groupByDay(meals: Meal[]): MealDayGroup[] {
   }));
 }
 
-// Presentational — no react-router-dom/store/useCases imports. "Comidas" tab of /historial:
-// full meal history grouped by calendar day (most recent first).
+// Presentational — no react-router-dom/store/useCases imports. Renders on /comidas: full meal
+// history grouped by calendar day (most recent first).
 export function MealHistory({ meals, isLoading }: MealHistoryProps) {
   const days = groupByDay(meals);
 
