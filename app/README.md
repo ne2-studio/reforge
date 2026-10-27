@@ -19,8 +19,9 @@ npm run dev
 ```
 
 `.env` needs `VITE_API_URL` (the backend's base URL), `VITE_OIDC_AUTHORITY`,
-`VITE_OIDC_CLIENT_ID`, and `VITE_OIDC_CALLBACK_URI`. The committed defaults point at the
-backend/fake-oidc from the root `docker-compose.yaml` running on localhost. The app is then
+`VITE_OIDC_CLIENT_ID`, and `VITE_OIDC_CALLBACK_URI`. `VITE_ZITADEL_ORGANIZATION_ID` is only set
+in production, where it scopes sign-in to Reforge's Zitadel org; leave it empty against
+fake-oidc. The committed defaults point at the backend/fake-oidc from the root `docker-compose.yaml` running on localhost. The app is then
 available at `http://localhost:5173`. You'll need the backend (and, for a full login flow,
 fake-oidc) running too — see the root [`README.md`](../README.md) or
 [`docs/operations/local-development.md`](../docs/operations/local-development.md).
