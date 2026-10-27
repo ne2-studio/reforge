@@ -13,7 +13,8 @@ test('user adds and deletes a meal library item, and it survives a reload', asyn
   page.on('pageerror', (err) => pageErrors.push(err));
 
   await loginAs(page, 'Reforge User 2');
-  await page.getByRole('button', { name: 'Biblioteca' }).click();
+  // No nav entry for the library — it's reached by URL (and from the meal logger below).
+  await page.goto('/biblioteca-comidas');
 
   await expect(page.getByRole('heading', { name: 'Biblioteca de comidas' })).toBeVisible();
   await expect(page.getByText('Aún no has guardado ninguna comida en tu biblioteca.')).toBeVisible();
@@ -21,6 +22,7 @@ test('user adds and deletes a meal library item, and it survives a reload', asyn
   // Add a library item via the meal logger's "guardar en biblioteca" affordance, exercising
   // that wiring alongside the CRUD screen itself.
   await page.goto('/comidas');
+  await page.getByRole('button', { name: 'Registrar comida' }).click();
   await page.getByLabel('Descripción').fill('Pollo con arroz y verduras');
   await page.getByLabel('Calorías (kcal)').fill('600');
   await page.getByLabel('Proteína (g)').fill('50');

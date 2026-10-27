@@ -9,7 +9,9 @@ test('user completes onboarding, and the saved profile survives a reload', async
   page.on('pageerror', (err) => pageErrors.push(err));
 
   await loginAs(page, 'Reforge User');
-  await page.getByRole('button', { name: 'Mi perfil' }).click();
+  // Profile lives behind the header's avatar menu (👤 until a gender is saved).
+  await page.getByRole('button', { name: '👤' }).click();
+  await page.getByRole('menuitem', { name: 'Perfil' }).click();
 
   await expect(page.getByText('Paso 1 de 5')).toBeVisible();
   await page.getByLabel('Edad').fill('28');
@@ -45,7 +47,8 @@ test('user completes onboarding, and the saved profile survives a reload', async
   await expect(page.getByText('Hombre')).toBeVisible();
   await expect(page.getByText('82.5 kg')).toBeVisible();
   await expect(page.getByText('181 cm')).toBeVisible();
-  await expect(page.getByText('Ganar músculo')).toBeVisible();
+  // exact: the header also shows the goal, as "💪 Ganar músculo".
+  await expect(page.getByText('Ganar músculo', { exact: true })).toBeVisible();
   await expect(page.getByText('Sin lactosa')).toBeVisible();
   await expect(page.getByText('Lunes')).toBeVisible();
   await expect(page.getByText('Miércoles')).toBeVisible();

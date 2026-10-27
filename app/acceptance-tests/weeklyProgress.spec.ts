@@ -16,6 +16,7 @@ test('user logs a meal and sees it reflected in weekly progress', async ({ page 
   await page.goto('/comidas');
 
   await expect(page.getByRole('heading', { name: 'Comidas', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Registrar comida' }).click();
   await page.getByLabel('Descripción').fill('Pollo con arroz y verduras');
   await page.getByLabel('Calorías (kcal)').fill('600');
   await page.getByLabel('Proteína (g)').fill('50');

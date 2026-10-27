@@ -12,7 +12,9 @@ test('user logs a manual meal, sees it reflected in daily-stats, and it survives
   // A different fake-oidc user than profile.spec.ts's — both specs complete onboarding for
   // their own user, and this suite otherwise shares no state with that one.
   await loginAs(page, 'Reforge User 2');
-  await page.getByRole('button', { name: 'Mi perfil' }).click();
+  // Profile lives behind the header's avatar menu (👤 until a gender is saved).
+  await page.getByRole('button', { name: '👤' }).click();
+  await page.getByRole('menuitem', { name: 'Perfil' }).click();
 
   await expect(page.getByText('Paso 1 de 5')).toBeVisible();
   await page.getByLabel('Edad').fill('28');
@@ -41,6 +43,7 @@ test('user logs a manual meal, sees it reflected in daily-stats, and it survives
 
   await expect(page.getByRole('heading', { name: 'Comidas', exact: true })).toBeVisible();
 
+  await page.getByRole('button', { name: 'Registrar comida' }).click();
   await page.getByLabel('Descripción').fill('Pollo con arroz y verduras');
   await page.getByLabel('Calorías (kcal)').fill('600');
   await page.getByLabel('Proteína (g)').fill('50');
@@ -48,17 +51,24 @@ test('user logs a manual meal, sees it reflected in daily-stats, and it survives
   await page.getByLabel('Grasas (g)').fill('15');
   await page.getByRole('button', { name: 'Guardar comida' }).click();
 
+  // Comidas lists the day's meals; "600 kcal" is both the meal's and the day's total, so the
+  // meal itself is pinned by its protein instead.
   await expect(page.getByText('Pollo con arroz y verduras')).toBeVisible();
-  await expect(page.getByText('600 kcal')).toBeVisible();
+  await expect(page.getByText('50g proteína')).toBeVisible();
+
+  // Daily-stats lives on Inicio.
+  await page.goto('/home');
   await expect(page.getByText('600 / ', { exact: false })).toBeVisible();
   await expect(page.getByText('50 / ', { exact: false })).toBeVisible();
 
   await page.reload();
 
+  await expect(page.getByText('600 / ', { exact: false })).toBeVisible();
+
+  await page.goto('/comidas');
   await expect(page.getByRole('heading', { name: 'Comidas', exact: true })).toBeVisible();
   await expect(page.getByText('Pollo con arroz y verduras')).toBeVisible();
-  await expect(page.getByText('600 kcal')).toBeVisible();
-  await expect(page.getByText('600 / ', { exact: false })).toBeVisible();
+  await expect(page.getByText('50g proteína')).toBeVisible();
 
   expect(pageErrors, pageErrors.map(String).join('\n')).toEqual([]);
 });
@@ -78,6 +88,7 @@ test('user logs a meal via AI analysis, and it is saved with the backend-compute
   await page.goto('/comidas');
 
   await expect(page.getByRole('heading', { name: 'Comidas', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Registrar comida' }).click();
   await page.getByRole('tab', { name: 'Analizar con IA' }).click();
 
   await page.getByLabel('Descripción').fill('2 huevos revueltos con aguacate y 2 tostadas');

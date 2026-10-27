@@ -11,7 +11,8 @@ test('user logs a strength workout and a cardio workout, and they survive a relo
   page.on('pageerror', (err) => pageErrors.push(err));
 
   await loginAs(page, 'Reforge User 2');
-  await page.getByRole('button', { name: 'Entrenamientos' }).click();
+  // No nav entry for workouts (the sidebar's "Actividad" covers /actividad) — reached by URL.
+  await page.goto('/entrenamientos');
 
   await expect(page.getByRole('heading', { name: 'Entrenamientos' })).toBeVisible();
   await expect(page.getByText('Aún no has registrado ningún entreno')).toBeVisible();

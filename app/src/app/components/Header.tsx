@@ -36,14 +36,17 @@ const goalLabels: Record<string, string> = {
 export function Header() {
   const navigate = useNavigate();
   const auth = useAuth();
-  const { profile, isLoading } = useProfileStore();
+  const { profile } = useProfileStore();
   const { subscriptions: subscriptionsEnabled } = useFeaturesStore();
 
+  // Once per mount, not keyed on [profile, isLoading]: a user who hasn't onboarded yet keeps
+  // profile === null after every load (GET 404s), so that re-fetched in a loop and left
+  // ProfileRoute stuck on "Cargando…".
   useEffect(() => {
-    if (!profile && !isLoading) {
+    if (!useProfileStore.getState().profile) {
       void loadProfile();
     }
-  }, [profile, isLoading]);
+  }, []);
 
   return (
     <div className="bg-card border-b border-border sticky top-0 z-10 backdrop-blur-lg bg-card/80 h-[60px]">

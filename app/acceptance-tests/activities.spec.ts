@@ -11,7 +11,8 @@ test('user logs a strength activity and a NEAT activity, and they survive a relo
   page.on('pageerror', (err) => pageErrors.push(err));
 
   await loginAs(page, 'Reforge User');
-  await page.getByRole('button', { name: 'Actividad' }).click();
+  // exact: the Inicio dashboard's "Registrar actividad" button also matches a substring search.
+  await page.getByRole('button', { name: 'Actividad', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Actividad', exact: true })).toBeVisible();
   await expect(page.getByText('Aún no has registrado ninguna actividad')).toBeVisible();
