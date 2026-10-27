@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Inter', ui-sans-serif, system-ui;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = ['hero-form', 'cta-form'];
+            
+            forms.forEach(formId => {
+                const form = document.getElementById(formId);
+                if (!form) return;
+                
+                const containerId = formId.replace('-form', '-form-container');
+                const successMsg = document.getElementById(formId.replace('-form', '-status-success'));
+                const errorMsg = document.getElementById(formId.replace('-form', '-status-error'));
+                const submitBtn = document.getElementById(formId.replace('-form', '-submit'));
+                
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    if (submitBtn) submitBtn.disabled = true;
+                    if (successMsg) successMsg.classList.add('hidden');
+                    if (errorMsg) errorMsg.classList.add('hidden');
+                    
+                    const formData = new FormData(form);
+                    const url = form.action;
+                    
+                    // MailerLite JSONP expectations
+                    // We use fetch with the form action, but MailerLite JSONP might need special handling
+                    // However, many modern setups just use the standard POST if CORS is enabled
+                    // If it's strictly JSONP, we'd need a script tag approach.
+                    // Given the URL has /jsonp/, let's try a standard fetch first as many "jsonp" endpoints now support CORS POST
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors' // Common for cross-origin form submissions if CORS isn't fully set up
+                    })
+                    .then(() => {
+                        // Since no-cors doesn't allow reading the response, we assume success if no error is thrown
+                        form.reset();
+                        if (successMsg) successMsg.classList.remove('hidden');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (errorMsg) errorMsg.classList.remove('hidden');
+                    })
+                    .finally(() => {
+                        if (submitBtn) submitBtn.disabled = false;
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body class="min-h-screen bg-[#030213] text-white font-sans selection:bg-[#FF6900] selection:text-white overflow-x-hidden">
+    {{ partial "header.html" . }}
+    <main>
+        {{ block "main" . }}{{ end }}
+    </main>
+    {{ partial "footer.html" . }}
+</body>
+</html>

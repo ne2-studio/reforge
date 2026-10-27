@@ -1,0 +1,33 @@
+{{ $variant := .variant | default "primary" }}
+{{ $size := .size | default "default" }}
+{{ $className := .className | default "" }}
+
+{{ $baseClasses := "inline-flex items-center justify-center rounded-full text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-black tracking-wide" }}
+
+{{ $variantClasses := "" }}
+{{ if eq $variant "primary" }}
+    {{ $variantClasses = "bg-gradient-to-r from-[#FF8904] to-[#E7000B] text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] shadow-[0px_4px_20px_0px_rgba(252,148,11,0.3)] border-0" }}
+{{ else if eq $variant "secondary" }}
+    {{ $variantClasses = "bg-white text-black hover:bg-gray-100" }}
+{{ else if eq $variant "outline" }}
+    {{ $variantClasses = "bg-transparent border border-white/20 text-white hover:bg-white/5 hover:border-white/40" }}
+{{ else if eq $variant "ghost" }}
+    {{ $variantClasses = "bg-transparent text-white hover:bg-white/5 hover:text-white" }}
+{{ end }}
+
+{{ $sizeClasses := "" }}
+{{ if eq $size "default" }}
+    {{ $sizeClasses = "h-11 py-2 px-6" }}
+{{ else if eq $size "sm" }}
+    {{ $sizeClasses = "h-9 px-4 text-xs" }}
+{{ else if eq $size "lg" }}
+    {{ $sizeClasses = "h-14 px-8 text-base" }}
+{{ end }}
+
+<button 
+  class="{{ $baseClasses }} {{ $variantClasses }} {{ $sizeClasses }} {{ $className }}"
+  {{ if .type }}type="{{ .type }}"{{ end }}
+  {{ if .id }}id="{{ .id }}"{{ end }}
+>
+    {{ .text }}
+</button>

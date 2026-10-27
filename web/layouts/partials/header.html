@@ -1,0 +1,22 @@
+<header class="fixed top-0 left-0 w-full z-50 bg-black h-[80px] flex items-center transition-all">
+    <div class="mx-auto w-full max-w-[1200px] px-6 md:px-8 flex items-center justify-between">
+        <a href="#" class="flex items-center gap-2 group">
+           <img src="/images/a8b45273faae46bb1137b01d0e963e91dc6aae30.png" alt="Reforge" class="h-12 w-auto object-contain">
+        </a>
+
+        <nav class="hidden md:flex items-center gap-10">
+          <a href="#features" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">
+            Características
+          </a>
+          <a href="#how-it-works" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">
+            Cómo funciona
+          </a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+          {{ partial "ui/button.html" (dict "text" "Unirse a la lista" "variant" "primary" "size" "sm" "className" "shadow-[0px_2px_12px_0px_rgba(252,148,11,0.2)]") }}
+        </div>
+    </div>
+    
+    <div class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-[#E7000B] via-[#FF8904] to-[#E7000B]"></div>
+</header>

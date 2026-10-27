@@ -1,0 +1,108 @@
+<section class="relative w-full min-h-[90vh] bg-black overflow-hidden flex items-center pt-28 pb-12 md:pt-32 md:pb-24">
+    <!-- Background Blurs - Global -->
+    <div class="absolute left-[20%] top-[-20%] w-[800px] h-[500px] bg-[rgba(245,73,0,0.1)] blur-[150px] rounded-full pointer-events-none"></div>
+    
+    <div class="mx-auto w-full max-w-[1200px] px-6 md:px-8 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+      <div class="flex flex-col items-start space-y-6 md:space-y-8">
+        <!-- Pill -->
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[rgba(255,105,0,0.2)] bg-[rgba(68,19,6,0.2)]">
+          <div class="w-2 h-2 rounded-full bg-gradient-to-r from-[#FFC300] to-[#FF2F00]"></div>
+          <span class="text-[#ff951d] text-xs font-medium tracking-wide">
+            Próximamente en iOS y Android
+          </span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
+          El usuario no necesita otra app de <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FF8904] to-[#E7000B]">contar calorías.</span>
+        </h1>
+
+        <!-- Description -->
+        <p class="text-lg lg:text-xl text-[#99a1af] font-normal leading-relaxed tracking-tight max-w-lg">
+          Reforge es tu coach de recomposición corporal con IA empática. Convierte tus datos en decisiones simples día a día, sin juicios y con flexibilidad.
+        </p>
+
+        <!-- CTA -->
+        <div id="hero-form-container" class="w-full max-w-lg">
+          <form
+            id="hero-form"
+            class="relative flex items-center group"
+            action="https://assets.mailerlite.com/jsonp/2091865/forms/182384440246273563/subscribe"
+            method="post"
+          >
+            <input
+              id="hero-email"
+              name="fields[email]"
+              type="email"
+              placeholder="tu@email.com"
+              class="w-full bg-[#18181b] border border-white/10 rounded-full pl-6 pr-36 md:pr-40 py-3 md:py-4 h-14 md:h-16 text-white text-sm md:text-base placeholder:text-gray-500 focus:outline-none focus:border-[#FF8904]/50 focus:ring-1 focus:ring-[#FF8904]/50 transition-all shadow-inner"
+              autocomplete="email"
+              required
+            >
+            
+            <!-- Hidden fields que MailerLite espera -->
+            <input type="hidden" name="ml-submit" value="1"/>
+            <input type="hidden" name="anticsrf" value="true"/>
+
+            <div class="absolute right-1.5 top-1.5 bottom-1.5 md:right-2 md:top-2 md:bottom-2">
+              {{ partial "ui/button.html" (dict "text" "Unirme" "variant" "primary" "size" "lg" "className" "h-full rounded-full px-6 md:px-8 text-sm md:text-base font-semibold shadow-none hover:shadow-lg transition-all" "type" "submit" "id" "hero-submit") }}
+            </div>
+            <div class="absolute -inset-[1px] bg-gradient-to-r from-[#FF8904] to-[#E7000B] rounded-full opacity-0 group-hover:opacity-20 transition-opacity pointer-events-none -z-10 blur-sm"></div>
+          </form>
+
+          <p id="hero-status-success" class="hidden text-sm text-green-500 font-medium mt-4">
+            ¡Gracias! Te avisaremos cuando abramos la app.
+          </p>
+          <p id="hero-status-error" class="hidden text-sm text-red-500 mt-4">
+            Algo salió mal. Por favor intenta de nuevo.
+          </p>
+        </div>
+
+        <!-- Feature List -->
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#FF6900] shrink-0" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7.33333" stroke="currentColor" stroke-width="1.33333"></circle>
+              <path d="M6 8L7.33333 9.33333L10 6.66667" stroke="currentColor" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span class="text-[#6a7282] text-sm">Sin contar calorías estrictamente</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#FF6900] shrink-0" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7.33333" stroke="currentColor" stroke-width="1.33333"></circle>
+              <path d="M6 8L7.33333 9.33333L10 6.66667" stroke="currentColor" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span class="text-[#6a7282] text-sm">Feedback empático en tiempo real</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#FF6900] shrink-0" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7.33333" stroke="currentColor" stroke-width="1.33333"></circle>
+              <path d="M6 8L7.33333 9.33333L10 6.66667" stroke="currentColor" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span class="text-[#6a7282] text-sm">Enfoque en recomposición corporal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Content - Phone Mockup -->
+      <div class="relative flex justify-center lg:justify-end">
+        <!-- Focal Point -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[525px] h-[739px] bg-[rgba(130,24,26,0.15)] blur-[100px] rounded-full pointer-events-none -z-10"></div>
+
+        <div class="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[65%] w-[400px] h-[400px] border border-[rgba(255,105,0,0.1)] rounded-full pointer-events-none"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[65%] w-[500px] h-[500px] border border-[rgba(255,105,0,0.05)] rounded-full pointer-events-none"></div>
+
+        <!-- Phone Container -->
+        <div class="relative z-10 w-[280px] h-[600px] sm:w-[300px] sm:h-[650px] bg-black rounded-[40px] border-8 border-black overflow-hidden shadow-[0px_25px_100px_-12px_rgba(126,42,12,0.3)]">
+           <img src="/images/a59f691d12791ce1d7d2046d4466bbdc2cef4f63.png" alt="Reforge App Interface" class="w-full h-full object-cover">
+           <!-- Gradient overlay at bottom of phone -->
+           <div class="absolute bottom-0 left-0 w-full h-[150px] bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center justify-end pb-8">
+              <p class="text-white font-semibold text-lg">Tu coach personal</p>
+              <p class="text-[#d1d5dc] text-sm">Disponible 24/7</p>
+           </div>
+           <!-- Notch -->
+           <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-20"></div>
+        </div>
+      </div>
+    </div>
+</section>
