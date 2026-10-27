@@ -133,7 +133,9 @@ exists).
 
 ## Other conventions
 
-- **Logging**: Serilog, console sink, request logging via `UseSerilogRequestLogging()`.
+- **Logging**: Serilog, console sink everywhere plus a Seq sink in Production
+  (`appsettings.Production.json`; the server URL comes from `Serilog__WriteTo__1__Args__serverUrl`),
+  request logging via `UseSerilogRequestLogging()`.
 - **API docs**: Swagger/Swashbuckle, enabled only in `Development`.
 - **CORS**: `AllowAnyOrigin`/`AllowAnyMethod`/`AllowAnyHeader` — acceptable since auth is bearer
   token, not cookies/origin-based.
