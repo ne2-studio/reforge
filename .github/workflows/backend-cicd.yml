@@ -57,6 +57,7 @@ jobs:
         with:
           image: ${{ env.IMAGE_NAME }}:latest
           context: api
+          dockerfile: api/Reforge.Api/Dockerfile
           cache-scope: backend-api
 
       - name: Scan backend image
