@@ -1,6 +1,6 @@
 # Reforge Website
 
-[![CI](https://github.com/ppardalj/reforge-web/actions/workflows/deploy.yml/badge.svg)](https://github.com/ppardalj/reforge-web/actions)
+Landing page served at https://reforge.ne2.studio, built and deployed by `.github/workflows/web-cicd.yml`.
 
 ## :pick: Requirements
 

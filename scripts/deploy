@@ -13,7 +13,7 @@ deployment to reach a final status. Coolify's own Health Check (configured
 per resource, see Configuration > Health Check) gates when a deployment is
 marked finished, so this doesn't re-check health itself.
 
-Services: backend, frontend, storybook
+Services: backend, frontend, storybook, web
 
 Environment:
   COOLIFY_WEBHOOK_<SERVICE>   Deployment webhook URL for <service> (required),
@@ -41,7 +41,7 @@ trigger_deploy() {
   local token="$2"
 
   local response
-  response=$(curl -f -sS -X GET "$webhook" -H "Authorization: Bearer $token") \
+  response=$(curl -f -sS -X POST "$webhook" -H "Authorization: Bearer $token") \
     || die "failed to call Coolify webhook"
   echo "$response" >&2
 
@@ -112,7 +112,7 @@ need curl
 need jq
 
 case "${1:-}" in
-  backend|frontend|storybook) deploy "$1" ;;
+  backend|frontend|storybook|web) deploy "$1" ;;
   -h|--help|help|"") usage ;;
   *) usage >&2; die "unknown service: $1" ;;
 esac
