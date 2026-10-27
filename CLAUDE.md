@@ -5,11 +5,12 @@ each day's log, and keep a coaching streak going.
 
 ## Repository structure
 
-Monorepo, two independently deployable services, **no shared code between them**
+Monorepo, independently deployable services, **no shared code between them**
 
 ```
 api/   # .NET backend, ports & adapters
 app/   # React + TypeScript + Vite frontend
+web/   # Hugo landing page (reforge.ne2.studio)
 ```
 
 ## Documentation

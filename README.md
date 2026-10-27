@@ -17,12 +17,14 @@ measurements, close each day's log, and keep a streak going.
 ```text
 app/            React + TypeScript + Vite frontend
 api/            .NET backend, ports & adapters
+storybook/      Storybook image for app/ components
+web/            Hugo landing page
 docs/           Architecture standard, API conventions, plan
 scripts/        run-env, verify, openapi and related helpers
 .claude/skills/ run, verify, update-changelog
 ```
 
-Monorepo, two independently deployable services, no shared code between
+Monorepo, independently deployable services, no shared code between
 them. Authentication uses an external OIDC provider (`fake-oidc` locally,
 Zitadel in production).
 
@@ -70,5 +72,18 @@ each test layer covers):
 
 ## Deployment
 
-Not configured yet — deployment automation will follow once
-`.github/workflows/` and the target infrastructure exist.
+Each service has its own workflow in `.github/workflows/` (`backend-cicd`, `frontend-cicd`,
+`storybook-cicd`, `web-cicd`). A push to `main` builds and tests it, releases its image to
+`ghcr.io/ne2-studio/reforge-<service>`, and triggers its Coolify webhook through
+`scripts/deploy`.
+
+| Service   | Image                                    | URL                                   |
+| --------- | ---------------------------------------- | ------------------------------------- |
+| backend   | `ghcr.io/ne2-studio/reforge-api`         | https://api-prod.reforge.ne2.studio   |
+| frontend  | `ghcr.io/ne2-studio/reforge-app`         | https://app-prod.reforge.ne2.studio   |
+| storybook | `ghcr.io/ne2-studio/reforge-storybook`   | https://storybook.reforge.ne2.studio  |
+| web       | `ghcr.io/ne2-studio/reforge-web`         | https://reforge.ne2.studio            |
+
+Coolify apps, their environment variables, the Postgres database, the Zitadel org and the
+GitHub Actions variables/secrets (`COOLIFY_WEBHOOK_*` per environment, `COOLIFY_API_TOKEN`)
+are managed as code in `ne2-studio/infra` (`modules/reforge`).
