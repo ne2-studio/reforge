@@ -82,11 +82,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: backend-production
-    # Reforge has no Coolify webhook secrets configured yet — this job is gated off by default
-    # via a repository Actions variable (not a secret) so it's always skipped until someone
-    # deliberately sets vars.DEPLOY_ENABLED=true after wiring up the secrets below. See
-    # docs/operations/local-development.md for local environment setup in the meantime.
-    if: vars.DEPLOY_ENABLED == 'true'
     permissions:
       contents: read
 
@@ -97,5 +92,5 @@ jobs:
         uses: ./.github/actions/deploy-coolify
         with:
           service: backend
-          webhook: ${{ secrets.COOLIFY_WEBHOOK_BACKEND }}
+          webhook: ${{ vars.COOLIFY_WEBHOOK_BACKEND }}
           token: ${{ secrets.COOLIFY_API_TOKEN }}
