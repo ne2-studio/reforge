@@ -1,24 +1,29 @@
 name: Storybook CI/CD
 
+# Deploys app/'s Storybook to Cloudflare Pages (project reforge-storybook): a push to main
+# deploys production (https://storybook.reforge.ne2.studio); a pull request deploys a preview at
+# <branch>.reforge-storybook.pages.dev and comments its URL on the PR.
 on:
   push:
     branches:
       - main
     paths:
       - '.github/workflows/storybook-cicd.yml'
+      - '.github/actions/comment-pages-preview/**'
       - 'app/**'
-      - 'storybook/**'
+  pull_request:
+    paths:
+      - '.github/workflows/storybook-cicd.yml'
+      - '.github/actions/comment-pages-preview/**'
+      - 'app/**'
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: storybook-cicd-${{ github.ref }}
-  cancel-in-progress: false
-
-env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}-storybook
+  # Never cancel a main run (it may be mid-deploy); supersede stale runs on other refs.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
@@ -42,41 +47,48 @@ jobs:
         working-directory: app
         run: npm run test:storybook
 
-      # Build context is the repo root - see storybook/Dockerfile.
-      - name: Package Storybook image
-        uses: ./.github/actions/docker-build-image
-        with:
-          image: ${{ env.IMAGE_NAME }}:latest
-          context: .
-          dockerfile: storybook/Dockerfile
-          cache-scope: storybook
+      - name: Build Storybook
+        working-directory: app
+        run: npm run build-storybook
 
-      - name: Scan Storybook image
-        uses: ./.github/actions/scan-image
+      - name: Upload Storybook
+        uses: actions/upload-artifact@v7
         with:
-          image: ${{ env.IMAGE_NAME }}:latest
-
-      - name: Release Storybook image
-        uses: ./.github/actions/release-ghcr-image
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          sha: ${{ github.sha }}
-          username: ${{ github.actor }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: storybook-static
+          path: app/storybook-static/
+          retention-days: 7
 
   deploy:
     needs: build
+    # Pull requests from forks get no access to secrets.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: storybook-production
     permissions:
       contents: read
+      deployments: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Deploy Storybook
-        uses: ./.github/actions/deploy-coolify
+      - name: Download Storybook
+        uses: actions/download-artifact@v7
         with:
-          service: storybook
-          webhook: ${{ vars.COOLIFY_WEBHOOK_STORYBOOK }}
-          token: ${{ secrets.COOLIFY_API_TOKEN }}
+          name: storybook-static
+          path: storybook-static
+
+      - name: Deploy Storybook
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy storybook-static --project-name=reforge-storybook --branch=${{ github.head_ref || github.ref_name }}
+
+      - name: Comment preview URL
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/comment-pages-preview
+        with:
+          name: storybook
+          url: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}

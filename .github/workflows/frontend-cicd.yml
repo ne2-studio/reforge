@@ -1,5 +1,8 @@
 name: Frontend CI/CD
 
+# Deploys app/ to Cloudflare Pages (project reforge-app): a push to main deploys production
+# (https://app-prod.reforge.ne2.studio); a pull request deploys a preview at
+# <branch>.reforge-app.pages.dev and comments its URL on the PR.
 on:
   push:
     branches:
@@ -9,6 +12,23 @@ on:
       - 'app/**'
       - 'docker-compose.lite.yml'
       - 'scripts/**'
+      - '.github/actions/comment-pages-preview/**'
+      # Everything reforge-api-lite is built from (see api/Reforge.Api.Lite/Dockerfile) — this
+      # pipeline builds and runs that image as part of its acceptance test, so a change to any
+      # of these can break it just as much as a change under app/ can.
+      - 'api/Reforge.Core/**'
+      - 'api/Reforge.Api.Common/**'
+      - 'api/Reforge.Api.Lite/**'
+      - 'api/Reforge.Infra.Common/**'
+      - 'api/Reforge.Infra.Lite/**'
+      - 'api/openapi/**'
+  pull_request:
+    paths:
+      - '.github/workflows/frontend-cicd.yml'
+      - 'app/**'
+      - 'docker-compose.lite.yml'
+      - 'scripts/**'
+      - '.github/actions/comment-pages-preview/**'
       # Everything reforge-api-lite is built from (see api/Reforge.Api.Lite/Dockerfile) — this
       # pipeline builds and runs that image as part of its acceptance test, so a change to any
       # of these can break it just as much as a change under app/ can.
@@ -21,14 +41,15 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: frontend-cicd-${{ github.ref }}
-  cancel-in-progress: false
+  # Never cancel a main run (it may be mid-deploy); supersede stale runs on other refs.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}-app
+  # Only used locally by the acceptance test below; it's never pushed or deployed.
+  APP_IMAGE: reforge-app:ci
 
 jobs:
   build:
@@ -65,19 +86,15 @@ jobs:
           artifact-name: frontend-coverage-report
           artifact-path: app/coverage
 
-      - name: Package frontend image
-        # No VITE_* build args are passed for app: the image reads runtime config at container
-        # start, matching production deployment.
+      - name: Package acceptance app image
+        # The acceptance suite runs the app as a container (app/Dockerfile) against api-lite,
+        # with VITE_* injected at container start, so the image is still built here — only for
+        # this test, not for deployment.
         uses: ./.github/actions/docker-build-image
         with:
-          image: ${{ env.IMAGE_NAME }}:latest
+          image: ${{ env.APP_IMAGE }}
           context: app
           cache-scope: frontend-app
-
-      - name: Scan frontend image
-        uses: ./.github/actions/scan-image
-        with:
-          image: ${{ env.IMAGE_NAME }}:latest
 
       - name: Package acceptance API image
         uses: ./.github/actions/docker-build-image
@@ -89,7 +106,6 @@ jobs:
 
       - name: Verify packaged frontend
         env:
-          APP_IMAGE: ${{ env.IMAGE_NAME }}:latest
           API_LITE_IMAGE: reforge-api-lite:ci
           KEEP_VERIFY_IMAGES: "1"
         run: ./scripts/verify --skip-image-build frontend-acceptance
@@ -102,27 +118,75 @@ jobs:
           path: app/playwright-report/
           retention-days: 7
 
-      - name: Release frontend image
-        uses: ./.github/actions/release-ghcr-image
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          sha: ${{ github.sha }}
-          username: ${{ github.actor }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
   deploy:
     needs: build
+    # Pull requests from forks get no access to secrets.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    # Holds the production VITE_* values. It has no branch policy, so PR previews can use it too
+    # (they point at the production API/OIDC; sign-in won't redirect back to a preview host).
     environment: frontend-production
     permissions:
       contents: read
+      deployments: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Deploy frontend
-        uses: ./.github/actions/deploy-coolify
+      - name: Build setup
+        uses: ./.github/actions/setup-node-package
         with:
-          service: frontend
-          webhook: ${{ vars.COOLIFY_WEBHOOK_FRONTEND }}
-          token: ${{ secrets.COOLIFY_API_TOKEN }}
+          working-directory: app
+
+      - name: Build frontend
+        working-directory: app
+        # Build-time fallbacks, the same values the Docker image took as build ARGs.
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
+          VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
+          VITE_OIDC_CALLBACK_URI: ${{ vars.VITE_OIDC_CALLBACK_URI }}
+        run: npm run build
+
+      - name: Render runtime config
+        working-directory: app
+        # What docker-entrypoint.d/95-generate-runtime-env.sh does at container start, done once
+        # at build time here: Pages serves static files only. Same explicit variable list.
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_OIDC_AUTHORITY: ${{ vars.VITE_OIDC_AUTHORITY }}
+          VITE_OIDC_CLIENT_ID: ${{ vars.VITE_OIDC_CLIENT_ID }}
+          VITE_OIDC_CALLBACK_URI: ${{ vars.VITE_OIDC_CALLBACK_URI }}
+          VITE_ZITADEL_ORGANIZATION_ID: ${{ vars.VITE_ZITADEL_ORGANIZATION_ID }}
+        run: |
+          envsubst '${VITE_API_URL} ${VITE_OIDC_AUTHORITY} ${VITE_OIDC_CLIENT_ID} ${VITE_OIDC_CALLBACK_URI} ${VITE_ZITADEL_ORGANIZATION_ID}' \
+            < dist/env-config.template.js \
+            > dist/env-config.js
+          cat dist/env-config.js
+
+      - name: Check SPA fallback
+        working-directory: app
+        # Pages only serves index.html for unknown routes (/callback, deep links) when the
+        # output has no top-level 404.html.
+        run: |
+          if [ -e dist/404.html ]; then
+            echo "dist/404.html would disable the Pages SPA fallback" >&2
+            exit 1
+          fi
+
+      - name: Deploy frontend
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: app
+          command: pages deploy dist --project-name=reforge-app --branch=${{ github.head_ref || github.ref_name }}
+
+      - name: Comment preview URL
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/comment-pages-preview
+        with:
+          name: app
+          url: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}

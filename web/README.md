@@ -1,6 +1,7 @@
 # Reforge Website
 
-Landing page served at https://reforge.ne2.studio, built and deployed by `.github/workflows/web-cicd.yml`.
+Landing page served at https://reforge.ne2.studio, built by `.github/workflows/web-cicd.yml` and deployed to
+Cloudflare Pages (project `reforge-web`; pull requests get a `<branch>.reforge-web.pages.dev` preview).
 
 ## :pick: Requirements
 
