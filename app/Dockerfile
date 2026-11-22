@@ -29,6 +29,8 @@ COPY --from=build /src/dist/ /usr/share/nginx/html/
 # src/runtimeConfig.ts for how the app reads it. The build-time ARGs above still matter: they
 # back the values baked in at build time (used by native/PWA-style builds, or any deploy that
 # hasn't set the runtime override), same mechanism as el-baul's app/Dockerfile.
+# Production doesn't run this image (it's served from Cloudflare Pages, see
+# .github/workflows/frontend-cicd.yml); it backs the acceptance tests and local compose.
 COPY --chmod=755 docker-entrypoint.d/95-generate-runtime-env.sh /docker-entrypoint.d/
 
 EXPOSE 80

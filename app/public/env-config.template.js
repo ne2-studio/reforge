@@ -1,6 +1,7 @@
-// Rendered into env-config.js by docker-entrypoint.d/95-generate-runtime-env.sh at container
-// start via envsubst — never imported/executed as-is. Any ${VAR} left unset by the
-// container's environment is substituted with an empty string, which src/runtimeConfig.ts
+// Rendered into env-config.js via envsubst — by .github/workflows/frontend-cicd.yml at deploy
+// time (Cloudflare Pages), or by docker-entrypoint.d/95-generate-runtime-env.sh at container
+// start (acceptance tests, local compose) — never imported/executed as-is. Any ${VAR} left
+// unset is substituted with an empty string, which src/runtimeConfig.ts
 // treats as "no override" and falls back to the Vite build-time value. Mirrors el-baul's
 // public/env-config.template.js.
 window.__ENV__ = {

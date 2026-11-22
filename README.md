@@ -17,7 +17,6 @@ measurements, close each day's log, and keep a streak going.
 ```text
 app/            React + TypeScript + Vite frontend
 api/            .NET backend, ports & adapters
-storybook/      Storybook image for app/ components
 web/            Hugo landing page
 docs/           Architecture standard, API conventions, plan
 scripts/        run-env, verify, openapi and related helpers
@@ -73,17 +72,26 @@ each test layer covers):
 ## Deployment
 
 Each service has its own workflow in `.github/workflows/` (`backend-cicd`, `frontend-cicd`,
-`storybook-cicd`, `web-cicd`). A push to `main` builds and tests it, releases its image to
-`ghcr.io/ne2-studio/reforge-<service>`, and triggers its Coolify webhook through
-`scripts/deploy`.
+`storybook-cicd`, `web-cicd`).
 
-| Service   | Image                                    | URL                                   |
-| --------- | ---------------------------------------- | ------------------------------------- |
-| backend   | `ghcr.io/ne2-studio/reforge-api`         | https://api-prod.reforge.ne2.studio   |
-| frontend  | `ghcr.io/ne2-studio/reforge-app`         | https://app-prod.reforge.ne2.studio   |
-| storybook | `ghcr.io/ne2-studio/reforge-storybook`   | https://storybook.reforge.ne2.studio  |
-| web       | `ghcr.io/ne2-studio/reforge-web`         | https://reforge.ne2.studio            |
+The backend is a container: a push to `main` builds and tests it, releases its image to
+`ghcr.io/ne2-studio/reforge-api`, and triggers its Coolify webhook through `scripts/deploy`.
 
-Coolify apps, their environment variables, the Postgres database, the Zitadel org and the
-GitHub Actions variables/secrets (`COOLIFY_WEBHOOK_*` per environment, `COOLIFY_API_TOKEN`)
-are managed as code in `ne2-studio/infra` (`modules/reforge`).
+The frontends are static sites on Cloudflare Pages: a push to `main` builds and tests them and
+deploys them to production with `wrangler pages deploy`; a pull request deploys a preview at
+`<branch>.<project>.pages.dev` and comments its URL on the PR. The app's runtime config
+(`env-config.js`, see `app/src/runtimeConfig.ts`) is rendered in CI from the `VITE_*` variables
+of the `frontend-production` GitHub environment. `app/Dockerfile` is still built in CI, but only
+to run the frontend acceptance tests against it; it isn't deployed.
+
+| Service   | Runs on                                       | URL                                   |
+| --------- | --------------------------------------------- | ------------------------------------- |
+| backend   | Coolify, image `ghcr.io/ne2-studio/reforge-api` | https://api-prod.reforge.ne2.studio   |
+| frontend  | Cloudflare Pages, project `reforge-app`       | https://app-prod.reforge.ne2.studio   |
+| storybook | Cloudflare Pages, project `reforge-storybook` | https://storybook.reforge.ne2.studio  |
+| web       | Cloudflare Pages, project `reforge-web`       | https://reforge.ne2.studio            |
+
+Coolify apps, Cloudflare Pages projects and domains, their environment variables, the Postgres
+database, the Zitadel org and the GitHub Actions variables/secrets (`COOLIFY_WEBHOOK_BACKEND`,
+`COOLIFY_API_TOKEN`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, the app's `VITE_*`) are
+managed as code in `ne2-studio/infra` (`modules/reforge`).

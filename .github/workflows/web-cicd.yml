@@ -1,13 +1,20 @@
 name: Web CI/CD
 
+# Deploys web/ to Cloudflare Pages (project reforge-web): a push to main deploys production
+# (https://reforge.ne2.studio); a pull request deploys a preview at
+# <branch>.reforge-web.pages.dev and comments its URL on the PR.
 on:
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/web-cicd.yml'
+      - '.github/actions/comment-pages-preview/**'
       - 'web/**'
   pull_request:
     paths:
       - '.github/workflows/web-cicd.yml'
+      - '.github/actions/comment-pages-preview/**'
       - 'web/**'
   workflow_dispatch:
 
@@ -18,9 +25,6 @@ concurrency:
   group: web-cicd-${{ github.ref }}
   # Never cancel a main run (it may be mid-deploy); supersede stale runs on other refs.
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-
-env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}-web
 
 jobs:
   build:
@@ -36,61 +40,52 @@ jobs:
 
       - name: Build Hugo site
         working-directory: web
-        run: hugo --minify --environment production
+        # Previews use root-relative URLs so their links don't jump to production.
+        run: hugo --minify --environment production ${{ github.event_name == 'pull_request' && '--baseURL /' || '' }}
 
-      - name: Package web image
-        uses: ./.github/actions/docker-build-image
+      - name: Check 404 page
+        # Without a top-level 404.html Pages treats the site as an SPA and answers unknown
+        # paths with the home page and a 200.
+        run: test -f web/public/404.html
+
+      - name: Upload site
+        uses: actions/upload-artifact@v7
         with:
-          image: ${{ env.IMAGE_NAME }}:latest
-          context: web
-          cache-scope: web
+          name: web-public
+          path: web/public/
+          retention-days: 7
 
-      - name: Scan web image
-        uses: ./.github/actions/scan-image
-        with:
-          image: ${{ env.IMAGE_NAME }}:latest
-
-  # Only main deploys: builds the image again (layers come from the build job's cache),
-  # pushes it to GHCR and triggers Coolify. Other branches and PRs never push or deploy.
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: build
+    # Pull requests from forks get no access to secrets.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: web-production
     permissions:
       contents: read
-      packages: write
+      deployments: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v7
 
-      - uses: peaceiris/actions-hugo@v3
+      - name: Download site
+        uses: actions/download-artifact@v7
         with:
-          hugo-version: "latest"
-          extended: true
-
-      - name: Build Hugo site
-        working-directory: web
-        run: hugo --minify --environment production
-
-      - name: Build deploy web image
-        uses: ./.github/actions/docker-build-image
-        with:
-          image: ${{ env.IMAGE_NAME }}:latest
-          context: web
-          cache-scope: web
-
-      - name: Release web image
-        uses: ./.github/actions/release-ghcr-image
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          sha: ${{ github.sha }}
-          username: ${{ github.actor }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: web-public
+          path: public
 
       - name: Deploy web
-        uses: ./.github/actions/deploy-coolify
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
         with:
-          service: web
-          webhook: ${{ vars.COOLIFY_WEBHOOK_WEB }}
-          token: ${{ secrets.COOLIFY_API_TOKEN }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy public --project-name=reforge-web --branch=${{ github.head_ref || github.ref_name }}
+
+      - name: Comment preview URL
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/comment-pages-preview
+        with:
+          name: web
+          url: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}

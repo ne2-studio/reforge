@@ -1,0 +1,42 @@
+name: Comment Cloudflare Pages preview
+description: >-
+  Create or update this frontend's preview URL comment on the current pull request. Each
+  frontend keeps its own comment (found by a hidden marker), so several frontends deploying
+  previews for the same PR don't overwrite each other's comment the way `gh pr comment
+  --edit-last` would.
+
+inputs:
+  name:
+    description: Frontend name shown in the comment and used in its marker (e.g. app, web).
+    required: true
+  url:
+    description: Preview URL to publish.
+    required: true
+  token:
+    description: Token with pull-requests write permission.
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Upsert preview comment
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+        NAME: ${{ inputs.name }}
+        URL: ${{ inputs.url }}
+      run: |
+        set -euo pipefail
+        marker="<!-- cloudflare-pages-preview:${NAME} -->"
+        body="$(printf '%s\nPreview %s: %s' "$marker" "$NAME" "$URL")"
+        comment_id="$(gh api "repos/${REPO}/issues/${PR}/comments" --paginate \
+          --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | tail -n 1)"
+        if [ -n "$comment_id" ]; then
+          gh api -X PATCH "repos/${REPO}/issues/comments/${comment_id}" -f body="$body" >/dev/null
+        else
+          gh pr comment "$PR" --repo "$REPO" --body "$body"
+        fi
+        echo "Preview ${NAME}: ${URL}"
