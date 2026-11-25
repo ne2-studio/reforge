@@ -37,3 +37,7 @@ Everything in this repo (incl. but not limited to code, docs, commit msgs...) MU
 written in english, EXCEPT domain terms that convey a special meaning, such as Comida
 (meal), Entrenamiento (workout), Racha (streak), Cierre del día (day close), etc. This
 list is not exhaustive — extend it as new domain terms show up.
+
+## Issues
+
+Project RFG in YouTrack (MCP `youtrack-ne2`). Before reading, writing or refining an issue, see `~/Projects/ne2-studio/infra/docs/issue-tracking.md`.
